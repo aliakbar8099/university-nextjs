@@ -1,0 +1,283 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@import "../../../public/fonts/font.css";
+
+button.MuiButton-root.MuiButton-colorPrimary{
+  background-color: var(--variant-solidBg, var(--joy-palette-primary-solidBg, var(--joy-palette-primary-500, #0B6BCB))) !important;
+}
+
+@layer utilities {
+  .bg-shadow-1 {
+    box-shadow: 0 0 15px #22292f0d;
+  }
+}
+
+* {
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  font-family: IRANSans !important;
+}
+
+body {
+  height: 100vh;
+  width: 100%;
+  background: #f5f7fb;
+}
+
+.sidbar {
+  @apply max-w-[300px] min-w-[300px] w-[300px] bg-white h-full bg-shadow-1;
+  transition: 0.3s ease;
+}
+
+.sidbar.close {
+  @apply max-w-[64px] min-w-[64px] w-[64px];
+}
+
+.sidbar.close .searchbox {
+  @apply hidden;
+}
+
+.sidbar.close .sub_item-menu {
+  @apply hidden;
+}
+
+.sidbar .name_menu {
+  @apply text-[14px];
+}
+
+.sidbar.close .name_menu {
+  @apply text-[0px];
+}
+
+.sidbar.close .arrow_menu {
+  @apply hidden;
+}
+
+.sidbar.close .PrimaryLogo {
+  @apply hidden;
+}
+
+.sidbar .WithoutNameLogo {
+  @apply hidden;
+}
+
+.sidbar.close .WithoutNameLogo {
+  @apply block;
+}
+
+.sidbar aside {
+  @apply sticky top-0;
+}
+
+input {
+  color: #101010 !important;
+  font-size: 14px !important;
+}
+
+.total-content {
+  @apply w-full h-full p-4 pt-0;
+}
+
+.navbar-panel {
+  @apply w-full bg-white bg-shadow-1 p-1 rounded-md z-50 border border-[#f5f7fb];
+}
+
+.container-panel {
+  @apply w-[99%] m-auto;
+}
+
+.sub_item-menu {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.5s cubic-bezier(0.165, 0.84, 0.44, 1), opacity 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.item-menu {
+  transform: 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.item-menu.active {
+  color: #0B6BCB;
+
+  svg {
+    fill: #0B6BCB;
+  }
+}
+
+.sub_item-menu.open {
+  max-height: 900px;
+}
+
+.sub_item-menu ul {
+  opacity: 0;
+  transition: opacity 0.5s cubic-bezier(0.165, 0.84, 0.44, 1), transform 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+  transform: translateY(-20px);
+}
+
+.sub_item-menu.open ul {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.arrow_menu {
+  transition: 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.arrow_menu.open {
+  @apply rotate-180;
+}
+
+.text-underMenu {
+  transition: 0.3s ease !important;
+  font-size: 22px;
+  color: #333;
+
+  svg {
+    fill: #333 !important;
+    transition: 0.3s ease !important;
+  }
+}
+
+.item-menu_hover {
+  background: #0000 !important;
+}
+
+.item-menu_hover.active {
+  color: #0B6BCB;
+
+  svg {
+    fill: #0B6BCB;
+  }
+}
+
+.name_menu {
+  white-space: nowrap;
+}
+
+.item-menu .text-underMenu:hover {
+  @apply text-[#0B6BCB] mr-1;
+
+  svg {
+    fill: #0B6BCB !important;
+  }
+}
+
+.link-hover:hover {
+  @apply text-[#0B6BCB];
+
+  svg {
+    fill: #0B6BCB !important;
+  }
+}
+
+.sub_item-menu a.avtive {
+  span {
+    @apply text-[#0B6BCB];
+  }
+
+  svg {
+    fill: #0B6BCB !important;
+  }
+}
+
+aside svg {
+  width: 24px !important;
+  height: 24px !important;
+}
+
+/* root */
+
+.content-root {
+  @apply bg-white bg-shadow-1 mt-2 rounded-md;
+}
+
+tr.active {
+  background: var(--TableRow-hoverBackground, var(--joy-palette-background-level3));
+}
+
+#calender_picker:not([data-skip-inverted-colors]) {
+  --Input-focusedHighlight: var(--_Input-focusedHighlight, var(--joy-palette-focusVisible));
+}
+
+#calender_picker {
+  --Input-radius: var(--joy-radius-sm);
+  --Input-gap: 0.5rem;
+  --Input-placeholderColor: inherit;
+  --Input-placeholderOpacity: 0.64;
+  --Input-decoratorColor: var(--joy-palette-text-icon);
+  --Input-focused: 0;
+  --Input-focusedThickness: var(--joy-focus-thickness);
+  --Input-focusedHighlight: var(--joy-palette-primary-500);
+  --Input-minHeight: 2.25rem;
+  --Input-paddingInline: 0.75rem;
+  --Input-decoratorChildHeight: min(1.75rem, var(--Input-minHeight));
+  --Icon-fontSize: var(--joy-fontSize-xl2);
+  --Input-decoratorChildOffset: min(calc(var(--Input-paddingInline) - (var(--Input-minHeight) - 2 * var(--variant-borderWidth, 0px) - var(--Input-decoratorChildHeight)) / 2), var(--Input-paddingInline));
+  --_Input-paddingBlock: max((var(--Input-minHeight) - 2 * var(--variant-borderWidth, 0px) - var(--Input-decoratorChildHeight)) / 2, 0px);
+  --Input-decoratorChildRadius: max(var(--Input-radius) - var(--variant-borderWidth, 0px) - var(--_Input-paddingBlock), min(var(--_Input-paddingBlock) + var(--variant-borderWidth, 0px), var(--Input-radius) / 2));
+  --Button-minHeight: var(--Input-decoratorChildHeight);
+  --Button-paddingBlock: 0px;
+  --IconButton-size: var(--Input-decoratorChildHeight);
+  --Button-radius: var(--Input-decoratorChildRadius);
+  --IconButton-radius: var(--Input-decoratorChildRadius);
+  box-sizing: border-box;
+  box-shadow: var(--joy-shadowRing, 0 0 #000), 0px 1px 2px 0px rgba(var(--joy-shadowChannel, 21 21 21) / var(--joy-shadowOpacity, 0.08));
+  min-width: 0;
+  min-height: var(--Input-minHeight);
+  cursor: text;
+  position: relative;
+  display: -webkit-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: flex;
+  padding-inline: var(--Input-paddingInline);
+  border-radius: var(--Input-radius);
+  font-family: var(--joy-fontFamily-body, "Inter", var(--joy-fontFamily-fallback, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol"));
+  font-size: var(--joy-fontSize-md, 1rem);
+  line-height: var(--joy-lineHeight-md, 1.5);
+  color: var(--variant-outlinedColor, var(--joy-palette-neutral-outlinedColor, var(--joy-palette-neutral-700, #32383E)));
+  --variant-borderWidth: 1px;
+  border: var(--variant-borderWidth) solid;
+  border-color: var(--variant-outlinedBorder, var(--joy-palette-neutral-outlinedBorder, var(--joy-palette-neutral-300, #CDD7E1)));
+  background-color: var(--joy-palette-background-surface);
+}
+
+#calender_picker input {
+  border: none;
+  min-width: 0;
+  outline: 0;
+  padding: 0;
+  -webkit-flex: 1;
+  -ms-flex: 1;
+  flex: 1;
+  color: inherit;
+  background-color: transparent;
+  font-family: inherit;
+  font-size: inherit;
+  font-style: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+  text-overflow: ellipsis;
+}
+
+#calender_picker input::before {
+  box-sizing: border-box;
+  content: "";
+  display: block;
+  position: absolute;
+  pointer-events: none;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  border-radius: inherit;
+  margin: calc(var(--variant-borderWidth, 0px) * -1);
+  box-shadow: var(--Input-focusedInset, inset) 0 0 0 calc(var(--Input-focused) * var(--Input-focusedThickness)) var(--Input-focusedHighlight);
+}
+
+#calender_picker:focus-within {
+  box-shadow: 0 0 0 2px #0b6bcb !important;
+}
