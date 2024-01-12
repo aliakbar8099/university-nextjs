@@ -6,6 +6,7 @@ import theme from '@/components/theme'
 import PanelLayout from '@/components/layout/panel'
 import { UserProvider } from '@/context/User'
 import { UIProvider } from '@/context/UI'
+import NextTopLoader from 'nextjs-toploader';
 
 // const inter = Inter({ subsets: ['latin'] })
 
@@ -26,6 +27,19 @@ export default function RootLayout({
         <UIProvider>
           <UserProvider>
             <CssVarsProvider theme={theme}>
+              <div dir='ltr'>
+                <NextTopLoader
+                  color="#0B6BCB"
+                  initialPosition={0.08}
+                  crawlSpeed={200}
+                  height={4}
+                  crawl={true}
+                  showSpinner={true}
+                  easing="ease"
+                  speed={200}
+                  shadow="0 0 10px #0B6BCB,0 0 5px #0B6BCB"
+                />
+              </div>
               <PanelLayout>{children}</PanelLayout>
             </CssVarsProvider>
           </UserProvider>

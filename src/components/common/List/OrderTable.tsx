@@ -27,15 +27,14 @@ import Dropdown from '@mui/joy/Dropdown';
 import FilterAltIcon from '@mui/icons-material/FilterAlt';
 import SearchIcon from '@mui/icons-material/Search';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
-import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
-import BlockIcon from '@mui/icons-material/Block';
-import AutorenewRoundedIcon from '@mui/icons-material/AutorenewRounded';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import MoreHorizRoundedIcon from '@mui/icons-material/MoreHorizRounded';
 import Checkbox from '@/components/common/Checkbox';
 import moment from 'moment-jalaali';
-import { Skeleton } from '@mui/joy';
+import { CircularProgress, Skeleton } from '@mui/joy';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { DatePickerJalali } from '../DatePickerJalali';
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
     if (b[orderBy] < a[orderBy]) {
@@ -77,27 +76,42 @@ function stableSort<T>(array: readonly T[], comparator: (a: T, b: T) => number) 
     return stabilizedThis.map((el) => el[0]);
 }
 
-function RowMenu() {
-    return (
-        <Dropdown>
-            <MenuButton
-                slots={{ root: IconButton }}
-                slotProps={{ root: { variant: 'plain', color: 'neutral', size: 'sm' } }}
-            >
-                <MoreHorizRoundedIcon />
-            </MenuButton>
-            <Menu size="sm" sx={{ minWidth: 140 }}>
-                <MenuItem>ویرایش</MenuItem>
-                <MenuItem>تغییر نام</MenuItem>
-                <MenuItem>انتقال</MenuItem>
-                <Divider />
-                <MenuItem color="danger">حذف</MenuItem>
-            </Menu>
-        </Dropdown>
-    );
+
+interface ITableOrder {
+    listItam: never[];
+    loading: boolean;
+    searchHandler: (event: React.ChangeEvent<HTMLInputElement>) => void;
+    filterElements?: React.JSX.Element | undefined;
+    haedItem: string[];
+    setRoute(page?: string, search?: string): void;
+    handelDelete: (id: number) => void;
+    handleEditSubmit: () => void;
+    loadingWithID: number;
+    setIsEditWidthID: React.Dispatch<React.SetStateAction<number>>;
+    isEditWidthID: number;
+    handleGetValue: ((e?: {
+        target: {
+            name: string;
+            value: string;
+        };
+    }) => void) | undefined
 }
 
-export default function OrderTable({ listItam = [], haedItem = [""], filterElements = <></>, loading = false }) {
+const OrderTable: React.FC<ITableOrder> = ({
+    listItam,
+    haedItem,
+    loadingWithID,
+    filterElements,
+    loading,
+    searchHandler,
+    setRoute,
+    isEditWidthID,
+    setIsEditWidthID,
+    handleEditSubmit,
+    handleGetValue,
+    handelDelete }) => {
+    const searchParams = useSearchParams()
+
     const [order, setOrder] = React.useState<Order>('desc');
     const [selected, setSelected] = React.useState<readonly string[]>([]);
     const [open, setOpen] = React.useState(false);
@@ -106,6 +120,27 @@ export default function OrderTable({ listItam = [], haedItem = [""], filterEleme
             {filterElements}
         </React.Fragment>
     );
+
+    function RowMenu({ id }: { id: number }) {
+        return (
+            <Dropdown>
+                <MenuButton
+                    slots={{ root: IconButton }}
+                    slotProps={{ root: { variant: 'plain', color: 'neutral', size: 'sm' } }}
+                >
+                    <MoreHorizRoundedIcon />
+                </MenuButton>
+                <Menu size="sm" sx={{ minWidth: 140 }}>
+                    <MenuItem onClick={() => setIsEditWidthID(id)} >ویرایش</MenuItem>
+                    <MenuItem>تغییر نام</MenuItem>
+                    <MenuItem>انتقال</MenuItem>
+                    <Divider />
+                    <MenuItem color="danger" onClick={() => handelDelete(id)}>حذف</MenuItem>
+                </Menu>
+            </Dropdown>
+        );
+    }
+
     return (
         <React.Fragment>
             <Sheet
@@ -160,11 +195,13 @@ export default function OrderTable({ listItam = [], haedItem = [""], filterEleme
                 }}
             >
                 <FormControl sx={{ flex: 1 }} size="sm">
-                    <FormLabel>جستجو برای سفارش</FormLabel>
+                    <FormLabel>جستجو برای عنوان نیم سال تحصیلی</FormLabel>
                     <Input
+                        onChange={searchHandler}
                         size="sm"
+                        defaultValue={searchParams.get("search") ?? ""}
                         placeholder="جستجو"
-                        startDecorator={<SearchIcon />}
+                        startDecorator={loading ? <CircularProgress size='sm' sx={{ "--CircularProgress-size": "20px" }} /> : <SearchIcon />}
                     />
                 </FormControl>
                 {renderFilters()}
@@ -173,7 +210,8 @@ export default function OrderTable({ listItam = [], haedItem = [""], filterEleme
                 className="OrderTableContainer"
                 variant="outlined"
                 sx={{
-                    display: { xs: 'none', sm: 'initial' },
+                    display: { xs: 'block', sm: 'block' },
+                    height: "60vh",
                     width: '100%',
                     borderRadius: 'sm',
                     flexShrink: 1,
@@ -186,6 +224,7 @@ export default function OrderTable({ listItam = [], haedItem = [""], filterEleme
                     aria-labelledby="tableTitle"
                     stickyHeader
                     hoverRow
+                    stripe={"even"}
                     sx={{
                         '--TableCell-headBackground': 'var(--joy-palette-background-level1)',
                         '--Table-headerUnderlineThickness': '1px',
@@ -207,6 +246,9 @@ export default function OrderTable({ listItam = [], haedItem = [""], filterEleme
                                         );
                                     }}
                                 />
+                            </th>
+                            <th style={{ width: 48, textAlign: 'right', padding: '12px 6px' }}>
+                                #
                             </th>
                             {
                                 haedItem.map((head, n) => {
@@ -243,28 +285,57 @@ export default function OrderTable({ listItam = [], haedItem = [""], filterEleme
                     <tbody>
                         {
                             !loading ?
-                                stableSort(listItam, getComparator(order, 'id')).map((row: any) => (
+                                stableSort(listItam, getComparator(order, 'id')).map((row: any, n: number) => (
                                     <tr key={row.id} className={selected.includes(row.id) ? "active" : undefined}>
                                         <td style={{ textAlign: 'center', width: 120 }}>
-                                            <Checkbox
-                                                checked={selected.includes(row.id)}
-                                                onChange={(event) => {
-                                                    setSelected((ids) =>
-                                                        event.target.checked
-                                                            ? ids.concat(row.id)
-                                                            : ids.filter((itemId) => itemId !== row.id),
-                                                    );
-                                                }}
-                                            />
+                                            {
+                                                loadingWithID === row.id ?
+                                                    <CircularProgress size='sm' sx={{ "--CircularProgress-size": "16px" }} />
+                                                    :
+                                                    <Checkbox
+                                                        checked={selected.includes(row.id)}
+                                                        onChange={(event) => {
+                                                            setSelected((ids) =>
+                                                                event.target.checked
+                                                                    ? ids.concat(row.id)
+                                                                    : ids.filter((itemId) => itemId !== row.id),
+                                                            );
+                                                        }}
+                                                    />
+                                            }
                                         </td>
                                         <td>
-                                            <Typography level="body-xs">{row.name}</Typography>
+                                            <Typography level="body-xs">{n + 1}</Typography>
                                         </td>
                                         <td>
-                                            <Typography level="body-xs">{moment(row.startDate.substring(0, 10)).format('jYYYY/jMM/jDD')}</Typography>
+                                            <Typography level="body-xs">
+                                                {
+                                                    isEditWidthID == row.id ?
+                                                        <Input onChange={handleGetValue} variant="outlined" name={Object.keys(row)[1]} defaultValue={row.name} className='w-auto' />
+                                                        :
+                                                        row.name
+                                                }
+                                            </Typography>
                                         </td>
                                         <td>
-                                            <Typography level="body-xs">{moment(row.endDate.substring(0, 10)).format('jYYYY/jMM/jDD')}</Typography>
+                                            <Typography level="body-xs">
+                                                {
+                                                    isEditWidthID == row.id ?
+                                                        <DatePickerJalali onChange={handleGetValue} defaultValue={row.startDate} name={Object.keys(row)[2]} />
+                                                        :
+                                                        moment(row.startDate.substring(0, 10)).format('jYYYY/jMM/jDD')
+                                                }
+                                            </Typography>
+                                        </td>
+                                        <td>
+                                            <Typography level="body-xs">
+                                                {
+                                                    isEditWidthID == row.id ?
+                                                        <DatePickerJalali onChange={handleGetValue} defaultValue={row.endDate} name={Object.keys(row)[3]} />
+                                                        :
+                                                        moment(row.endDate.substring(0, 10)).format('jYYYY/jMM/jDD')
+                                                }
+                                            </Typography>
                                         </td>
                                         {/* <td>
                                         <Chip
@@ -299,31 +370,36 @@ export default function OrderTable({ listItam = [], haedItem = [""], filterEleme
                                     </td> */}
                                         <td>
                                             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', justifyContent: "end" }}>
-                                                {/* <Link level="body-xs" component="button">
-                                                دانلود
-                                            </Link> */}
-                                                <RowMenu />
+                                                {
+                                                    isEditWidthID === row.id ?
+                                                        <Button onClick={() => handleEditSubmit()}>ذخیره</Button>
+                                                        :
+                                                        <RowMenu id={row.id} />
+                                                }
                                             </Box>
                                         </td>
                                     </tr>
                                 ))
                                 :
-                                [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12].map((row: any) => (
+                                [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16].map((row: any) => (
                                     <tr key={row}>
                                         <td style={{ textAlign: 'center', width: 40 }}>
                                             <div className='flex justify-center items-center'>
                                                 <Skeleton animation="wave" width={18} height={18} />
                                             </div>
                                         </td>
-                                        <td>
-                                            <Typography level="body-xs"><Skeleton animation="wave" variant="text" /></Typography>
+                                        <td style={{ textAlign: 'center', width: 40 }}>
+                                            <div className='flex justify-center items-center'>
+                                                <Skeleton animation="wave" width={18} height={18} />
+                                            </div>
                                         </td>
-                                        <td>
-                                            <Typography level="body-xs"><Skeleton animation="wave" variant="text" /></Typography>
-                                        </td>
-                                        <td>
-                                            <Typography level="body-xs"><Skeleton animation="wave" variant="text" /></Typography>
-                                        </td>
+                                        {
+                                            haedItem.map((head, n) => (
+                                                <td key={n}>
+                                                    <Typography level="body-xs"><Skeleton animation="wave" variant="text" /></Typography>
+                                                </td>
+                                            ))
+                                        }
                                         <td>
                                             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', justifyContent: "end" }}>
                                                 <Skeleton animation="wave" width={38} height={10} />
@@ -335,6 +411,7 @@ export default function OrderTable({ listItam = [], haedItem = [""], filterEleme
                     </tbody>
                 </Table>
             </Sheet>
+
             <Box
                 className="Pagination-laptopUp"
                 sx={{
@@ -342,7 +419,7 @@ export default function OrderTable({ listItam = [], haedItem = [""], filterEleme
                     gap: 1,
                     [`& .${iconButtonClasses.root}`]: { borderRadius: '50%' },
                     display: {
-                        xs: 'none',
+                        xs: 'flex',
                         md: 'flex',
                     },
                 }}
@@ -353,26 +430,38 @@ export default function OrderTable({ listItam = [], haedItem = [""], filterEleme
                     size="sm"
                     variant="outlined"
                     color="neutral"
-                    endDecorator={<KeyboardArrowRightIcon />}
+                    onClick={() => setRoute(JSON.stringify(((parseInt(searchParams.get("page") ?? "1") - 1) <= 1 && 1)), "")} endDecorator={<KeyboardArrowRightIcon />}
                 >
                     قبلی
                 </Button>
 
-                <Box sx={{ flex: 1 }} />
-                {['1', '2', '3', '…', '8', '9', '10'].map((page) => (
-                    <IconButton
-                        key={page}
-                        size="sm"
-                        variant={Number(page) ? 'outlined' : 'plain'}
-                        color="neutral"
-                    >
-                        {page}
-                    </IconButton>
-                ))}
-                <Box sx={{ flex: 1 }} />
+                <div className='flex lg:hidden w-full justify-center items-center'>
+                    <Typography level="body-sm" mx="auto">
+                        صفحه 1 از 10
+                    </Typography>
+                </div>
+
+                <div className='hidden md:flex w-full justify-center items-center'>
+                    <Box sx={{ flex: 1 }} />
+
+                    {Array.from({ length: parseInt(`${(20 / 12) + 1}`) }, (value, index) => index).map((page) => (
+                        <IconButton
+                            key={page + 1}
+                            size="sm"
+                            sx={{ mx: 1 }}
+                            onClick={() => setRoute(`${(page + 1)}`, "")}
+                            variant={(parseInt(searchParams.get("page") ?? "1") === (page + 1) ? 'outlined' : 'soft')}
+                            color="primary"
+                        >
+                            {page + 1}
+                        </IconButton>
+                    ))}
+                    <Box sx={{ flex: 1 }} />
+                </div>
                 <Button
                     dir='ltr'
                     size="sm"
+                    onClick={() => setRoute(`${((parseInt(searchParams.get("page") ?? "1") + 1) >= parseInt(`${(20 / 12) + 1}`) && parseInt(`${(20 / 12) + 1}`))}`, "")}
                     variant="outlined"
                     color="neutral"
                     startDecorator={<KeyboardArrowLeftIcon />}
@@ -383,3 +472,5 @@ export default function OrderTable({ listItam = [], haedItem = [""], filterEleme
         </React.Fragment>
     );
 }
+
+export default OrderTable;

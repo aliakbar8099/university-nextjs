@@ -24,6 +24,7 @@ import BlockIcon from '@mui/icons-material/Block';
 import AutorenewRoundedIcon from '@mui/icons-material/AutorenewRounded';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
+import moment from 'moment-jalaali';
 
 const listItems: any = []
 
@@ -47,11 +48,19 @@ function RowMenu() {
     );
 }
 
-export default function OrderList({ listItam = [], haedItem = [""] }) {
+interface IListOrder {
+    listItam: never[];
+    loading: boolean;
+    searchHandler: (event: React.ChangeEvent<HTMLInputElement>) => void;
+    filterElements?: React.JSX.Element | undefined;
+    haedItem: string[];
+}
+
+export default function OrderList({ listItam, haedItem }: IListOrder) {
 
     return (
-        <Box sx={{ display: { xs: 'block', sm: 'none' } }}>
-            {listItems.map((listItem: any) => (
+        <Box sx={{ display: { xs: 'none', sm: 'none' } }}>
+            {listItam.map((listItem: any) => (
                 <List
                     key={listItem.id}
                     size="sm"
@@ -67,15 +76,12 @@ export default function OrderList({ listItam = [], haedItem = [""] }) {
                         }}
                     >
                         <ListItemContent sx={{ display: 'flex', gap: 2, alignItems: 'start' }}>
-                            <ListItemDecorator>
+                            {/* <ListItemDecorator>
                                 <Avatar size="sm">{listItem.customer.initial}</Avatar>
-                            </ListItemDecorator>
+                            </ListItemDecorator> */}
                             <div>
                                 <Typography fontWeight={600} gutterBottom>
-                                    {listItem.customer.name}
-                                </Typography>
-                                <Typography level="body-xs" gutterBottom>
-                                    {listItem.customer.email}
+                                    {listItem.name}
                                 </Typography>
                                 <Box
                                     sx={{
@@ -86,16 +92,16 @@ export default function OrderList({ listItam = [], haedItem = [""] }) {
                                         mb: 1,
                                     }}
                                 >
-                                    <Typography level="body-xs">{listItem.date}</Typography>
+                                    <Typography level="body-xs">{moment(listItem.startDate.substring(0, 10)).format('jYYYY/jMM/jDD')}</Typography>
                                     <Typography level="body-xs">&bull;</Typography>
-                                    <Typography level="body-xs">{listItem.id}</Typography>
+                                    <Typography level="body-xs">{moment(listItem.endDate.substring(0, 10)).format('jYYYY/jMM/jDD')}</Typography>
                                 </Box>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                                {/* <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
                                     <Link level="body-sm" component="button">
                                         دانلود
                                     </Link>
                                     <RowMenu />
-                                </Box>
+                                </Box> */}
                             </div>
                         </ListItemContent>
                         {/* <Chip

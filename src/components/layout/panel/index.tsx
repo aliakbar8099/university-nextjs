@@ -23,6 +23,8 @@ function PanelLayout({
     const { isLoading } = useUser();
     const [openSideBar, setOpenSidbar] = useState<boolean>(true);
 
+    useEffect(() => setOpenSidbar(!window.matchMedia("(max-width: 1024px)").matches), [])
+
     function handleOpenMunu(): void {
         setOpenSidbar(!openSideBar);
     }
@@ -37,38 +39,10 @@ function PanelLayout({
                         <LazySidbar openSideBar={openSideBar} />
                     </div>
                     <div className='total-content'>
-                        <div className='sticky top-0 py-2 bg-[#f5f7fb]'>
+                        <div className='sticky top-0 pt-1 lg:pt-0 lg:py-2 bg-[#f5f7fb]'>
                             <LazyNavbar handleOpenMunu={handleOpenMunu} openSideBar={openSideBar} />
                         </div>
                         <div className='content-root'>
-                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                <Breadcrumbs
-                                    size="sm"
-                                    aria-label="breadcrumbs"
-                                    separator={<ChevronLeftRounded />}
-                                    sx={{ pl: 0 }}
-                                >
-                                    {
-                                        findRoutes(Routes, pathname).map((i, n, list) => (
-                                            n === list.length - 1 ?
-                                                <Typography key={n} color="primary" fontWeight={500} fontSize={14}>
-                                                    {i?.icon}
-                                                    {" "}
-                                                    {i?.name}
-                                                </Typography>
-                                                :
-                                                <Link
-                                                    key={n}
-                                                    href={i?.path ?? ""}
-                                                >
-                                                    {i?.icon}
-                                                    {" "}
-                                                    {i?.name}
-                                                </Link>
-                                        ))
-                                    }
-                                </Breadcrumbs>
-                            </Box>
                             {children}
                         </div>
                     </div>
@@ -77,3 +51,32 @@ function PanelLayout({
 }
 
 export default PanelLayout;
+
+/*<Box sx={{ display: 'flex', alignItems: 'center' }}>
+<Breadcrumbs
+    size="sm"
+    aria-label="breadcrumbs"
+    separator={<ChevronLeftRounded />}
+    sx={{ pl: 0 }}
+>
+    {
+        findRoutes(Routes, pathname).map((i, n, list) => (
+            n === list.length - 1 ?
+                <Typography key={n} color="primary" fontWeight={500} fontSize={14}>
+                    {i?.icon}
+                    {" "}
+                    {i?.name}
+                </Typography>
+                :
+                <Link
+                    key={n}
+                    href={i?.path ?? ""}
+                >
+                    {i?.icon}
+                    {" "}
+                    {i?.name}
+                </Link>
+        ))
+    }
+</Breadcrumbs>
+</Box>*/

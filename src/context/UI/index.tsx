@@ -40,6 +40,7 @@ interface UIProviderProps {
 export const UIProvider: React.FC<UIProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(UIreducer, initialState);
 
+
   const showAlert: ShowAlert = (newMessage, newColor = 'primary', newSeverity = 'soft') => {
     dispatch({ type: 'SHOW_ALERT', message: newMessage, color: newColor, severity: newSeverity });
   };
@@ -58,7 +59,7 @@ export const UIProvider: React.FC<UIProviderProps> = ({ children }) => {
   };
 
   return (
-    <UIContext.Provider value={{ showAlert, showModal , closeModal}}>
+    <UIContext.Provider value={{ showAlert, showModal, closeModal }}>
       <ModalElements ModalState={state.modal} handleClose={closeModal} />
       {children}
       <Snackbar
