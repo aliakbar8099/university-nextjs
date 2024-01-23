@@ -8,7 +8,7 @@ export const UIreducer = (state: State, action: Action): State => {
         alert: {
           open: true,
           message: action.message,
-          variant: action.severity || 'soft',
+          variant: action.severity || 'outlined',
           color: action.color || 'primary',
         },
       };

@@ -34,7 +34,7 @@ export const Routes = [
     {
         id: 4, name: "مدیریت استاد", icon: <SchoolIcon />,
         chids: [
-            { name: "ثبت استاد", path: "/" },
+            { name: "ثبت استاد", path: "/professor" },
         ],
     },
     {
@@ -47,9 +47,10 @@ export const Routes = [
     {
         id: 7, name: "اطلاعات پایه", icon: <FeedRoundedIcon />,
         chids: [
-            { name: "دانشکده", path: "/" },
+            { name: "رشته تحصیلی", path: "/base/field" },
+            { name: "دانشکده", path: "/base/college" },
             { name: "نیم سال", path: "/base/semester" },
-            { name: "کاربران سیستم", path: "/" },
+            { name: "کاربران سیستم", path: "/base/users" },
         ],
     },
     {

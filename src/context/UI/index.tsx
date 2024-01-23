@@ -50,7 +50,6 @@ export const UIProvider: React.FC<UIProviderProps> = ({ children }) => {
   };
 
   const showModal = (modalState: ModalProps["ModalState"]) => {
-    console.log(modalState);
     dispatch({ type: 'SHOW_MODAL', modalState });
   };
 
@@ -66,8 +65,8 @@ export const UIProvider: React.FC<UIProviderProps> = ({ children }) => {
         open={state.alert.open}
         autoHideDuration={6000}
         onClose={hideAlert}
-        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-        variant={state.alert.variant}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        variant={"solid"}
         color={state.alert.color}
       >
         {state.alert.message}

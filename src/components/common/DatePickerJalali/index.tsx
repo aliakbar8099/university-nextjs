@@ -2,14 +2,9 @@ import * as React from 'react';
 import { DatePicker } from 'zaman';
 import "./custom.css"
 
-export function DatePickerJalali({ name = "", defaultValue = "", onChange = (e = { target: { name: "", value: "" } }) => { } }) {
+export function DatePickerJalali({ name = "", defaultValue = "" }) {
     const [value, setValue] = React.useState<Date | string>("");
 
-    React.useMemo(() => {
-        if (value) {
-            onChange({ target: { name: name, value: value ? new Date(value).toISOString() : new Date().toISOString() } })
-        }
-    }, [value])
 
     return (
         <div id='calender_picker'>

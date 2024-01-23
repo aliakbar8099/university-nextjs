@@ -1,13 +1,32 @@
 import { ChangeEvent, useEffect, useMemo, useState } from "react";
 import OrderTable from "./OrderTable";
 import { performDelete, performGet, performPut } from "@/services/Instance/fetch.service";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useUI } from "@/context/UI";
 import { WarningRounded } from "@mui/icons-material";
 import { Button } from "@mui/joy";
 
+interface IsubQuery {
+    name: string;
+    title: string;
+    option: {
+        key: string;
+        value: string;
+    }[];
+}[]
 
-function ListItem({ path = "", change = new Date() || undefined, haedItem = [""] }) {
+interface ListProps {
+    path?: string | undefined;
+    change?: Date | undefined;
+    haedItem?: any;
+    handleShowModalAdd: (id?: number) => void;
+    pageName: string;
+    subQuery?: IsubQuery[]
+    readOnly?: boolean;
+    target?: string;
+}
+
+function ListItem({ path, change, haedItem, handleShowModalAdd, pageName, subQuery, readOnly, target }: ListProps) {
     const { showModal, closeModal, showAlert } = useUI()
     const [listItam, setListItem] = useState([])
     const [loading, setLoading] = useState(false)
@@ -16,9 +35,10 @@ function ListItem({ path = "", change = new Date() || undefined, haedItem = [""]
     const [isEditWidthID, setIsEditWidthID] = useState(0);
     const [editValue, setEidtValue] = useState<any>({});
     const router = useRouter()
+    const pathname = usePathname()
 
-    function setRoute(page: string = "1", search: string = "") {
-        const url = `/base/semester${search ? "?" : `?page=${page || 1}&`}${page ? "" : "search=" + search}`
+    function setRoute(page: string = "1", search: string = "", subSerach = "") {
+        const url = `${pathname}/${search ? "?" : `?page=${page || 1}&`}${page ? "" : "search=" + search}${subSerach}`
         setRouerPath(url)
         router.push(url)
     }
@@ -79,9 +99,6 @@ function ListItem({ path = "", change = new Date() || undefined, haedItem = [""]
         }).catch(err => console.log(err))
     }
 
-    console.log(editValue);
-
-
     return (
         <div className="relative">
             <OrderTable
@@ -95,8 +112,12 @@ function ListItem({ path = "", change = new Date() || undefined, haedItem = [""]
                 isEditWidthID={isEditWidthID}
                 handleEditSubmit={handleEditSubmit}
                 handleGetValue={handleGetValue}
+                handleShowModalAdd={handleShowModalAdd}
+                target={target}
+                readOnly={readOnly}
+                subQuery={subQuery}
+                pageName={pageName}
                 setRoute={setRoute} />
-            {/* <OrderList haedItem={haedItem} listItam={listItam} /> */}
         </div>
     );
 }

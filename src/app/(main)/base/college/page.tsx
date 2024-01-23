@@ -24,7 +24,7 @@ interface SignInFormElement extends HTMLFormElement {
     readonly elements: FormElements;
 }
 
-type FormInputKey = 'name' | 'startDate' | 'endDate';
+type FormInputKey = 'CollegeName';
 
 interface FormInput {
     name: string;
@@ -34,14 +34,12 @@ interface FormInput {
 }
 
 const FormInputs: Record<FormInputKey, FormInput> = {
-    "name": { name: "عنوان", type: "text" },
-    "startDate": { name: "تاریخ شروع نیم سال", type: "date" },
-    "endDate": { name: "تاریخ پایان نیم سال", type: "date" },
+    "CollegeName": { name: "نام دانشکده", type: "text" },
 } as const;
 
 // path uri
-const pathname = "/semester"
-const pageName = "نیم سال تحصیلی"
+const pathname = "/College"
+const pageName = "دانشکده"
 
 export default function Semester() {
     const { showModal, showAlert, closeModal } = useUI();
@@ -74,16 +72,10 @@ export default function Semester() {
             return;
         }
 
-        const data = {
-            name: formElements.name.value,
-            startDate: formElements.startDate.value,
-            endDate: formElements.endDate.value,
-        };
-
         setIsLoading(true)
 
         if (id) {
-            performPut(`${pathname}/${id}`, data).then(() => {
+            performPut(`${pathname}/${id}`, serializedData).then(() => {
                 setIsLoading(false)
                 showAlert('با موفقیت ویرایش شد', "success");
                 setChange(new Date())
@@ -94,7 +86,7 @@ export default function Semester() {
                 showAlert(err.message, "danger");
             })
         } else {
-            performPost(pathname, data).then(() => {
+            performPost(pathname, serializedData).then(() => {
                 setIsLoading(false)
                 showAlert('با موفقیت ثبت شد', "success");
                 setChange(new Date())
@@ -116,7 +108,7 @@ export default function Semester() {
                     color: "primary",
                     title: <h4>ویرایش {pageName}</h4>,
                     content: <div className='min-w-min md:min-w-[500px]'>
-                        <Alert {...{ title: 'Neutral', color: 'warning' }} >اطلاعات {pageName} را بررسی و ویرایش کنید.</Alert>
+                        <Alert {...{ title: 'Neutral', color: 'warning' }} >{pageName} را بررسی و ویرایش کنید.</Alert>
                         <form
                             onSubmit={(e: React.FormEvent<SignInFormElement>) => handleSubmit(e, id)}
                         >

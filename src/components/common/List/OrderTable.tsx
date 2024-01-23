@@ -35,6 +35,7 @@ import moment from 'moment-jalaali';
 import { CircularProgress, Skeleton } from '@mui/joy';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { DatePickerJalali } from '../DatePickerJalali';
+import { useUI } from '@/context/UI';
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
     if (b[orderBy] < a[orderBy]) {
@@ -76,19 +77,32 @@ function stableSort<T>(array: readonly T[], comparator: (a: T, b: T) => number) 
     return stabilizedThis.map((el) => el[0]);
 }
 
+interface IsubQuery {
+    name: string;
+    title: string;
+    option: {
+        key: string;
+        value: string;
+    }[];
+}[]
 
 interface ITableOrder {
     listItam: never[];
     loading: boolean;
     searchHandler: (event: React.ChangeEvent<HTMLInputElement>) => void;
     filterElements?: React.JSX.Element | undefined;
-    haedItem: string[];
-    setRoute(page?: string, search?: string): void;
+    haedItem: any;
+    setRoute(page?: string, search?: string, subSerach?: string): void;
     handelDelete: (id: number) => void;
     handleEditSubmit: () => void;
     loadingWithID: number;
     setIsEditWidthID: React.Dispatch<React.SetStateAction<number>>;
     isEditWidthID: number;
+    pageName: string;
+    handleShowModalAdd: (id?: number) => void;
+    subQuery?: IsubQuery[];
+    readOnly?: boolean;
+    target?: string;
     handleGetValue: ((e?: {
         target: {
             name: string;
@@ -101,25 +115,60 @@ const OrderTable: React.FC<ITableOrder> = ({
     listItam,
     haedItem,
     loadingWithID,
-    filterElements,
     loading,
     searchHandler,
     setRoute,
-    isEditWidthID,
-    setIsEditWidthID,
-    handleEditSubmit,
-    handleGetValue,
+    subQuery,
+    pageName,
+    handleShowModalAdd,
+    target,
+    readOnly,
     handelDelete }) => {
     const searchParams = useSearchParams()
+    const { closeModal } = useUI()
 
     const [order, setOrder] = React.useState<Order>('desc');
     const [selected, setSelected] = React.useState<readonly string[]>([]);
     const [open, setOpen] = React.useState(false);
+
+    function handleSelectRow(id: number) {
+        let inputEl = document.getElementsByName(target ?? "")[0] as HTMLInputElement;
+        inputEl.value = id.toString()
+        closeModal()
+    }
+
     const renderFilters = () => (
         <React.Fragment>
-            {filterElements}
+            {
+                subQuery?.map(item => (
+                    <FormControl size="sm">
+                        <FormLabel sx={{ fontSize: "12px" }}>فیلتر بر اساس {item.title}</FormLabel>
+                        <Select
+                            size="sm"
+                            name={item.name}
+                            defaultValue={parseInt(searchParams.get(item.name) ?? "all")}
+                            placeholder={item.title + " را انتخاب کنید "}
+                            slotProps={{ button: { sx: { whiteSpace: 'nowrap' } } }}
+                        >
+                            <Option
+                                onClick={() => setRoute("", "", "")}
+                                value={"all"}
+                            >همه</Option>
+                            {
+                                item.option.map((i: any) => (
+                                    <Option
+                                        onClick={() => setRoute("", "", `&${item.name}=${i.key}`)}
+                                        value={i.key}
+                                    >{i.value}</Option>
+                                ))
+                            }
+                        </Select>
+                    </FormControl>
+                ))
+            }
         </React.Fragment>
     );
+
 
     function RowMenu({ id }: { id: number }) {
         return (
@@ -131,7 +180,7 @@ const OrderTable: React.FC<ITableOrder> = ({
                     <MoreHorizRoundedIcon />
                 </MenuButton>
                 <Menu size="sm" sx={{ minWidth: 140 }}>
-                    <MenuItem onClick={() => setIsEditWidthID(id)} >ویرایش</MenuItem>
+                    <MenuItem onClick={() => handleShowModalAdd(id)} >ویرایش</MenuItem>
                     <MenuItem>تغییر نام</MenuItem>
                     <MenuItem>انتقال</MenuItem>
                     <Divider />
@@ -143,44 +192,6 @@ const OrderTable: React.FC<ITableOrder> = ({
 
     return (
         <React.Fragment>
-            <Sheet
-                className="SearchAndFilters-mobile"
-                sx={{
-                    display: { xs: 'flex', sm: 'none' },
-                    my: 1,
-                    gap: 1,
-                }}
-            >
-                <Input
-                    size="sm"
-                    placeholder="جستجو"
-                    startDecorator={<SearchIcon />}
-                    sx={{ flexGrow: 1 }}
-                />
-                <IconButton
-                    size="sm"
-                    variant="outlined"
-                    color="neutral"
-                    onClick={() => setOpen(true)}
-                >
-                    <FilterAltIcon />
-                </IconButton>
-                <Modal open={open} onClose={() => setOpen(false)}>
-                    <ModalDialog aria-labelledby="filter-modal" layout="fullscreen">
-                        <ModalClose />
-                        <Typography id="filter-modal" level="h2">
-                            فیلترها
-                        </Typography>
-                        <Divider sx={{ my: 2 }} />
-                        <Sheet sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                            {renderFilters()}
-                            <Button color="primary" onClick={() => setOpen(false)}>
-                                ثبت
-                            </Button>
-                        </Sheet>
-                    </ModalDialog>
-                </Modal>
-            </Sheet>
             <Box
                 className="SearchAndFilters-tabletUp"
                 sx={{
@@ -195,7 +206,7 @@ const OrderTable: React.FC<ITableOrder> = ({
                 }}
             >
                 <FormControl sx={{ flex: 1 }} size="sm">
-                    <FormLabel>جستجو برای عنوان نیم سال تحصیلی</FormLabel>
+                    <FormLabel>جستجو برای عنوان {pageName}</FormLabel>
                     <Input
                         onChange={searchHandler}
                         size="sm"
@@ -225,6 +236,7 @@ const OrderTable: React.FC<ITableOrder> = ({
                     stickyHeader
                     hoverRow
                     stripe={"even"}
+                    borderAxis="both"
                     sx={{
                         '--TableCell-headBackground': 'var(--joy-palette-background-level1)',
                         '--Table-headerUnderlineThickness': '1px',
@@ -235,7 +247,7 @@ const OrderTable: React.FC<ITableOrder> = ({
                 >
                     <thead>
                         <tr>
-                            <th style={{ width: 48, textAlign: 'center', padding: '12px 6px' }}>
+                            {!readOnly && <th style={{ width: 48, textAlign: 'center', padding: '12px 6px' }}>
                                 <Checkbox
                                     checked={selected.length === listItam.length}
                                     onChange={(event) => {
@@ -246,37 +258,33 @@ const OrderTable: React.FC<ITableOrder> = ({
                                         );
                                     }}
                                 />
-                            </th>
+                            </th>}
                             <th style={{ width: 48, textAlign: 'right', padding: '12px 6px' }}>
                                 #
                             </th>
+                            <th style={{ width: 48, padding: '12px 6px' }}>
+                                <Link
+                                    style={{ display: "flex", justifyContent: "end" }}
+                                    underline="none"
+                                    color="primary"
+                                    component="button"
+                                    onClick={() => setOrder(order === 'asc' ? 'desc' : 'asc')}
+                                    fontWeight="lg"
+                                    endDecorator={<ArrowDropDownIcon />}
+                                    sx={{
+                                        '& svg': {
+                                            transition: '0.2s',
+                                            transform:
+                                                order === 'desc' ? 'rotate(0deg)' : 'rotate(180deg)',
+                                        },
+                                    }}
+                                >
+                                    شناسه
+                                </Link>
+                            </th>
                             {
-                                haedItem.map((head, n) => {
-                                    if (n === 0) {
-                                        return (
-                                            <th style={{ width: 120, padding: '12px 6px' }}>
-                                                <Link
-                                                    style={{ display: "flex", justifyContent: "end" }}
-                                                    underline="none"
-                                                    color="primary"
-                                                    component="button"
-                                                    onClick={() => setOrder(order === 'asc' ? 'desc' : 'asc')}
-                                                    fontWeight="lg"
-                                                    endDecorator={<ArrowDropDownIcon />}
-                                                    sx={{
-                                                        '& svg': {
-                                                            transition: '0.2s',
-                                                            transform:
-                                                                order === 'desc' ? 'rotate(0deg)' : 'rotate(180deg)',
-                                                        },
-                                                    }}
-                                                >
-                                                    {head}
-                                                </Link>
-                                            </th>
-                                        )
-                                    }
-                                    return <th style={{ width: 180, padding: '12px 6px', textAlign: "right" }}>{head}</th>
+                                Object.values(haedItem).map((head: any, n) => {
+                                    return !head.noTable && <th style={{ width: 180, padding: '12px 6px', textAlign: "right" }}>{head?.name}</th>
                                 })
                             }
                             <th style={{ width: 140, padding: '12px 6px', textAlign: "right" }}> </th>
@@ -287,7 +295,7 @@ const OrderTable: React.FC<ITableOrder> = ({
                             !loading ?
                                 stableSort(listItam, getComparator(order, 'id')).map((row: any, n: number) => (
                                     <tr key={row.id} className={selected.includes(row.id) ? "active" : undefined}>
-                                        <td style={{ textAlign: 'center', width: 120 }}>
+                                        {!readOnly && <td style={{ textAlign: 'center', width: 120 }}>
                                             {
                                                 loadingWithID === row.id ?
                                                     <CircularProgress size='sm' sx={{ "--CircularProgress-size": "16px" }} />
@@ -303,40 +311,50 @@ const OrderTable: React.FC<ITableOrder> = ({
                                                         }}
                                                     />
                                             }
-                                        </td>
+                                        </td>}
                                         <td>
                                             <Typography level="body-xs">{n + 1}</Typography>
                                         </td>
                                         <td>
-                                            <Typography level="body-xs">
-                                                {
-                                                    isEditWidthID == row.id ?
-                                                        <Input onChange={handleGetValue} variant="outlined" name={Object.keys(row)[1]} defaultValue={row.name} className='w-auto' />
-                                                        :
-                                                        row.name
+                                            <Typography level="body-xs">{row.id}</Typography>
+                                        </td>
+                                        {
+                                            Object.values(haedItem).map((head: any, index) => {
+                                                const key = Object.keys(haedItem)[index]
+
+
+                                                if (head.type === "date") {
+                                                    return (
+                                                        !head.noTable &&
+                                                        <td>
+                                                            <Typography level="body-xs">
+                                                                {moment(row[key].substring(0, 10)).format('jYYYY/jMM/jDD')}
+                                                            </Typography>
+                                                        </td>
+                                                    )
                                                 }
+
+                                                return (
+                                                    !head.noTable &&
+                                                    <td>
+                                                        <Typography level="body-xs">
+                                                            {row[key]}
+                                                        </Typography>
+                                                    </td>
+                                                )
+                                            })
+
+                                        }
+                                        {/* <td>
+                                            <Typography level="body-xs">
+                                                {moment(row.startDate.substring(0, 10)).format('jYYYY/jMM/jDD')}
                                             </Typography>
                                         </td>
                                         <td>
                                             <Typography level="body-xs">
-                                                {
-                                                    isEditWidthID == row.id ?
-                                                        <DatePickerJalali onChange={handleGetValue} defaultValue={row.startDate} name={Object.keys(row)[2]} />
-                                                        :
-                                                        moment(row.startDate.substring(0, 10)).format('jYYYY/jMM/jDD')
-                                                }
+                                                {moment(row.endDate.substring(0, 10)).format('jYYYY/jMM/jDD')}
                                             </Typography>
-                                        </td>
-                                        <td>
-                                            <Typography level="body-xs">
-                                                {
-                                                    isEditWidthID == row.id ?
-                                                        <DatePickerJalali onChange={handleGetValue} defaultValue={row.endDate} name={Object.keys(row)[3]} />
-                                                        :
-                                                        moment(row.endDate.substring(0, 10)).format('jYYYY/jMM/jDD')
-                                                }
-                                            </Typography>
-                                        </td>
+                                        </td> */}
                                         {/* <td>
                                         <Chip
                                             variant="soft"
@@ -371,8 +389,8 @@ const OrderTable: React.FC<ITableOrder> = ({
                                         <td>
                                             <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', justifyContent: "end" }}>
                                                 {
-                                                    isEditWidthID === row.id ?
-                                                        <Button onClick={() => handleEditSubmit()}>ذخیره</Button>
+                                                    readOnly ?
+                                                        <Button className='w-full' onClick={() => handleSelectRow(row.id)} >انتخاب</Button>
                                                         :
                                                         <RowMenu id={row.id} />
                                                 }
@@ -394,7 +412,7 @@ const OrderTable: React.FC<ITableOrder> = ({
                                             </div>
                                         </td>
                                         {
-                                            haedItem.map((head, n) => (
+                                            Object.values(haedItem).map((head, n) => (
                                                 <td key={n}>
                                                     <Typography level="body-xs"><Skeleton animation="wave" variant="text" /></Typography>
                                                 </td>

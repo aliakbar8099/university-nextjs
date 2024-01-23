@@ -8,7 +8,7 @@ import Typography from '@mui/joy/Typography';
 import DownloadRoundedIcon from '@mui/icons-material/DownloadRounded';
 import { AddRounded } from '@mui/icons-material';
 import { useUI } from '@/context/UI';
-import { Alert, FormControl, FormLabel, Input } from '@mui/joy';
+import { Alert, FormControl, FormLabel, Input, Option, Select } from '@mui/joy';
 import { Stack } from '@mui/system';
 import { DatePickerJalali } from '@/components/common/DatePickerJalali';
 import { performGet, performPost, performPut } from '@/services/Instance/fetch.service';
@@ -24,29 +24,100 @@ interface SignInFormElement extends HTMLFormElement {
     readonly elements: FormElements;
 }
 
-type FormInputKey = 'name' | 'startDate' | 'endDate';
+type FormInputKey = 'FSName' | 'fk_CollegeID';
 
 interface FormInput {
     name: string;
     type: string;
     value?: any;
-    options?: JSX.Element;
+    options?: never[];
+    dataType?: string;
 }
 
+interface IsubQuery {
+    name: string;
+    title: string;
+    option: {
+        key: string;
+        value: string;
+    }[];
+}[]
+
 const FormInputs: Record<FormInputKey, FormInput> = {
-    "name": { name: "عنوان", type: "text" },
-    "startDate": { name: "تاریخ شروع نیم سال", type: "date" },
-    "endDate": { name: "تاریخ پایان نیم سال", type: "date" },
+    "FSName": { name: "نام رشته", type: "text" },
+    "fk_CollegeID": {
+        name: "دانشکده",
+        type: "select",
+        dataType: "integer",
+        options: []
+    },
 } as const;
 
 // path uri
-const pathname = "/semester"
-const pageName = "نیم سال تحصیلی"
+const pathname = "/field"
+const pageName = "رشته تحصیلی"
 
-export default function Semester() {
+const subQuery: IsubQuery[] = [{
+    name: "CollegeID",
+    title: "دانشکده",
+    option: []
+}]
+
+function Forms(data: any, res?: any) {
+    return (
+        Object.keys(data).map((key) => {
+            const typedKey = key as FormInputKey;
+            const { name, type, options, value } = data[typedKey];
+
+            if (type === "date") {
+                return (
+                    <FormControl>
+                        <FormLabel>{name}</FormLabel>
+                        <DatePickerJalali name={key} defaultValue={res?.responseData[key] ?? ""} />
+                    </FormControl>
+                )
+            }
+            if (type === "select") {
+                return (
+                    <FormControl>
+                        <FormLabel>{name}</FormLabel>
+                        <Select
+                            name={key}
+                            placeholder={name + " را انتخاب کنید "}
+                        >
+                            {
+                                options.map((i: any) => (
+                                    <Option value={i.id}>{i.CollegeName}</Option>
+                                ))
+                            }
+                        </Select>
+                    </FormControl>
+                )
+            }
+            return (
+                <FormControl>
+                    <FormLabel>{name}</FormLabel>
+                    <Input autoFocus name={key} defaultValue={res?.responseData[key] ?? ""} />
+                </FormControl>
+            )
+        })
+    )
+}
+
+export default function FeildPage({ readOnly = false , target = "" }) {
     const { showModal, showAlert, closeModal } = useUI();
     const [isLoading, setIsLoading] = React.useState<boolean>(false);
+    const [isLoading2, setIsLoading2] = React.useState<boolean>(false);
     const [change, setChange] = React.useState<Date>(new Date());
+
+    React.useEffect(() => {
+        setIsLoading2(true)
+        performGet("/College").then(res => {
+            FormInputs.fk_CollegeID.options = res.responseData;
+            subQuery[0].option = res.responseData.map((i: any) => ({ key: i.id, value: i.CollegeName }))
+            setIsLoading2(false)
+        })
+    }, [])
 
     function handleSubmit(event: React.FormEvent<SignInFormElement>, id?: number) {
         event.preventDefault();
@@ -58,13 +129,18 @@ export default function Semester() {
         const formData = new FormData(form);
 
         formData.forEach((value, key) => {
-            serializedData[key] = value;
+            const formInputKey = key as FormInputKey;
+            if (FormInputs[formInputKey]?.dataType === "integer") {
+                serializedData[formInputKey] = parseInt(value.toString());
+            } else {
+                serializedData[formInputKey] = value;
+            }
         });
 
         let isValid = true
         for (const key of Object.keys(FormInputs) as FormInputKey[]) {
-            if (!formElements[key].value) {
-                formElements[key].focus()
+            if (!serializedData[key]) {
+                // formElements[key]?.focus()
                 showAlert(`لطفا ${FormInputs[key].name} را وارد کنید!`, "danger");
                 isValid = false;
                 break;
@@ -74,16 +150,10 @@ export default function Semester() {
             return;
         }
 
-        const data = {
-            name: formElements.name.value,
-            startDate: formElements.startDate.value,
-            endDate: formElements.endDate.value,
-        };
-
         setIsLoading(true)
 
         if (id) {
-            performPut(`${pathname}/${id}`, data).then(() => {
+            performPut(`${pathname}/${id}`, serializedData).then(() => {
                 setIsLoading(false)
                 showAlert('با موفقیت ویرایش شد', "success");
                 setChange(new Date())
@@ -94,7 +164,7 @@ export default function Semester() {
                 showAlert(err.message, "danger");
             })
         } else {
-            performPost(pathname, data).then(() => {
+            performPost(pathname, serializedData).then(() => {
                 setIsLoading(false)
                 showAlert('با موفقیت ثبت شد', "success");
                 setChange(new Date())
@@ -116,32 +186,12 @@ export default function Semester() {
                     color: "primary",
                     title: <h4>ویرایش {pageName}</h4>,
                     content: <div className='min-w-min md:min-w-[500px]'>
-                        <Alert {...{ title: 'Neutral', color: 'warning' }} >اطلاعات {pageName} را بررسی و ویرایش کنید.</Alert>
+                        <Alert {...{ title: 'Neutral', color: 'warning' }} >{pageName} را بررسی و ویرایش کنید.</Alert>
                         <form
                             onSubmit={(e: React.FormEvent<SignInFormElement>) => handleSubmit(e, id)}
                         >
                             <Stack spacing={2} mt={2}>
-                                {
-                                    Object.keys(FormInputs).map((key) => {
-                                        const typedKey = key as FormInputKey;
-                                        const { name, type, options, value } = FormInputs[typedKey];
-
-                                        if (type === "date") {
-                                            return (
-                                                <FormControl>
-                                                    <FormLabel>{name}</FormLabel>
-                                                    <DatePickerJalali name={key} defaultValue={res.responseData[key]} />
-                                                </FormControl>
-                                            )
-                                        }
-                                        return (
-                                            <FormControl>
-                                                <FormLabel>{name}</FormLabel>
-                                                <Input autoFocus name={key} defaultValue={res.responseData[key]} />
-                                            </FormControl>
-                                        )
-                                    })
-                                }
+                                {Forms(FormInputs, res)}
                                 <Button loading={isLoading} type="submit">ثبت ویرایش</Button>
                             </Stack>
                         </form>
@@ -160,27 +210,7 @@ export default function Semester() {
                         onSubmit={handleSubmit}
                     >
                         <Stack spacing={2} mt={2}>
-                            {
-                                Object.keys(FormInputs).map((key) => {
-                                    const typedKey = key as FormInputKey;
-                                    const { name, type, options, value } = FormInputs[typedKey];
-
-                                    if (type === "date") {
-                                        return (
-                                            <FormControl>
-                                                <FormLabel>{name}</FormLabel>
-                                                <DatePickerJalali name={key} defaultValue={value} />
-                                            </FormControl>
-                                        )
-                                    }
-                                    return (
-                                        <FormControl>
-                                            <FormLabel>{name}</FormLabel>
-                                            <Input autoFocus name={key} defaultValue={value} />
-                                        </FormControl>
-                                    )
-                                })
-                            }
+                            {Forms(FormInputs)}
                             <Button loading={isLoading} type="submit">ثبت اطلاعات</Button>
                         </Stack>
                     </form>
@@ -213,7 +243,7 @@ export default function Semester() {
                         gap: 1,
                     }}
                 >
-                    <Box
+                    {!readOnly && <Box
                         sx={{
                             display: 'flex',
                             mb: 1,
@@ -232,6 +262,7 @@ export default function Semester() {
                                 dir='ltr'
                                 color="primary"
                                 startDecorator={<AddRounded />}
+                                loading={isLoading2}
                                 size="sm"
                                 onClick={() => handleShowModalAdd()}
                             >
@@ -248,8 +279,8 @@ export default function Semester() {
                                 خروجی Excel
                             </Button>
                         </div>
-                    </Box>
-                    <ListItem path={pathname} pageName={pageName} change={change} handleShowModalAdd={handleShowModalAdd} haedItem={FormInputs} />
+                    </Box>}
+                    <ListItem readOnly={readOnly} target={target} subQuery={subQuery} path={pathname} pageName={pageName} change={change} handleShowModalAdd={handleShowModalAdd} haedItem={FormInputs} />
                 </Box>
             </Box>
         </CssVarsProvider>
