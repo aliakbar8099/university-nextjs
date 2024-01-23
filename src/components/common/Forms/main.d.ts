@@ -3,7 +3,7 @@ export interface FormInput {
     name: string;
     type: string;
     value?: any;
-    options?: never[];
+    options?: any[];
     dataType?: string;
     min?: number;
     max?: number;
@@ -12,6 +12,8 @@ export interface FormInput {
     noTable?: true;
     noInput?: true;
     placeholder?: string;
+    disabled?:true;
+    hidden?:true;
 }
 
 export interface IsubQuery {

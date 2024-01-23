@@ -25,7 +25,7 @@ interface NavbarProps {
 const Navbar: React.FC<NavbarProps> = ({ handleOpenMunu, openSideBar }) => {
     const pathname = usePathname()
     const { showModal, closeModal } = useUI();
-    const { user, logout, isLoadingLogout } = useUser();
+    const { user, logout, isLoadingLogout, semester } = useUser();
 
     const [isItems, setIsItems] = useState(false);
     const [isHideBtnMuue, setIsHideBtnMuue] = useState(false);
@@ -39,7 +39,7 @@ const Navbar: React.FC<NavbarProps> = ({ handleOpenMunu, openSideBar }) => {
             open: true,
             variant: "outlined",
             title: <p>خروج از حساب</p>,
-            color:"danger",
+            color: "danger",
             titleIcon: <WarningRounded />,
             content: <p>آیا میخواهید از حساب خود خارج شوید؟</p>,
             Actions: (
@@ -58,7 +58,7 @@ const Navbar: React.FC<NavbarProps> = ({ handleOpenMunu, openSideBar }) => {
     return (
         <nav className="navbar-panel">
             <div className="container-panel flex justify-between items-center">
-                
+
                 {
                     isItems ?
                         <>
@@ -106,7 +106,7 @@ const Navbar: React.FC<NavbarProps> = ({ handleOpenMunu, openSideBar }) => {
                                         <div className='flex items-center p-1'>
                                             <Avatar src='https://avatar.iran.liara.run/public' variant="outlined" size='md' />
                                             <div className='text-right hidden lg:block'>
-                                                <h4 className='truncate w-[200px] mr-3 text-[14px]'>بدون نیم سال</h4>
+                                                <h4 className='truncate w-[200px] mr-3 text-[14px]'>{semester?.name ?? "بدون نیم سال"}</h4>
                                                 <small className='truncate w-[220px] mr-3'>{user?.firstName} {user?.lastName}</small>
                                             </div>
                                         </div>

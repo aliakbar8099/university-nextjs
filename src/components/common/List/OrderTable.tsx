@@ -146,13 +146,13 @@ const OrderTable: React.FC<ITableOrder> = ({
                         <Select
                             size="sm"
                             name={item.name}
-                            defaultValue={parseInt(searchParams.get(item.name) ?? "all")}
+                            defaultValue={parseInt(searchParams.get(item.name) ?? "")}
                             placeholder={item.title + " را انتخاب کنید "}
                             slotProps={{ button: { sx: { whiteSpace: 'nowrap' } } }}
                         >
                             <Option
                                 onClick={() => setRoute("", "", "")}
-                                value={"all"}
+                                value={""}
                             >همه</Option>
                             {
                                 item.option.map((i: any) => (
@@ -411,8 +411,14 @@ const OrderTable: React.FC<ITableOrder> = ({
                                                 <Skeleton animation="wave" width={18} height={18} />
                                             </div>
                                         </td>
+                                        <td style={{ textAlign: 'center', width: 40 }}>
+                                            <div className='flex justify-center items-center'>
+                                                <Skeleton animation="wave" width={18} height={18} />
+                                            </div>
+                                        </td>
                                         {
-                                            Object.values(haedItem).map((head, n) => (
+                                            Object.values(haedItem).map((head: any, n) => (
+                                                !head.noTable &&
                                                 <td key={n}>
                                                     <Typography level="body-xs"><Skeleton animation="wave" variant="text" /></Typography>
                                                 </td>

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Dropdown, Menu, MenuButton, MenuItem } from '@mui/joy';
 import { findRoutes } from '@/routes/findRoutes';
 import { usePathname } from 'next/navigation';
+import { useUser } from '@/context/User';
 
 interface MenusProps {
     openSideBar: boolean;
@@ -13,6 +14,9 @@ interface MenusProps {
 
 
 const Menus: React.FC<MenusProps> = ({ openSideBar }) => {
+    const { user } = useUser()
+    const role = user?.role
+
     const pathname = usePathname();
     const [select, setSelect] = useState(0);
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -50,6 +54,7 @@ const Menus: React.FC<MenusProps> = ({ openSideBar }) => {
                                 </Link>
                             </div>
                             :
+                            !item.hide?.includes(role ?? "") &&
                             <Dropdown key={item.id}>
                                 <MenuButton variant="plain" className={`item-menu_hover mb-5 p-0 ${findRoutes(Routes, pathname)[0].id === item.id ? "active" : ""}`}>
                                     <Link
@@ -64,6 +69,8 @@ const Menus: React.FC<MenusProps> = ({ openSideBar }) => {
                                 <Menu className='mr-5' sx={{ right: 1 }}>
                                     {
                                         item.chids && item.chids.map((i: any, n: number) => (
+                                            // access menu
+                                            i.access.includes(role) &&
                                             <Link href={i.path}>
                                                 <MenuItem key={n} className='flex items-center text-underMenu cursor-pointer mb-4'>
                                                     <KeyboardArrowLeftOutlinedIcon fontSize='inherit' />
@@ -96,6 +103,7 @@ const Menus: React.FC<MenusProps> = ({ openSideBar }) => {
                             </Link>
                         </div>
                         :
+                        !item.hide?.includes(role ?? "") &&
                         <div
                             key={item.id}
                             className={`item-menu ${select === item.id ? "mb-1" : "mb-6"} ${findRoutes(Routes, pathname)[0].id === item.id ? "active" : ""}`}
@@ -114,6 +122,8 @@ const Menus: React.FC<MenusProps> = ({ openSideBar }) => {
                                 <ul className='p-4 pb-0'>
                                     {
                                         item.chids && item.chids.map((i: any, n: number) => (
+                                            // access menu
+                                            i.access.includes(role) &&
                                             <Link
                                                 href={i.path}
                                                 className={findRoutes(Routes, pathname).find(item => item.path === pathname)?.id == i.path ? 'avtive' : ''}

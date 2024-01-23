@@ -136,6 +136,6 @@ export const performPut = async (url: string, data: any): Promise<any> => {
     return performCrudOperation(url, { method: "PUT" }, data);
 };
 
-export const performDelete = async (url: string): Promise<any> => {
-    return performCrudOperation(url, { method: "DELETE" });
+export const performDelete = async (url: string, data?: any): Promise<any> => {
+    return performCrudOperation(url, { method: "DELETE" }, data);
 };

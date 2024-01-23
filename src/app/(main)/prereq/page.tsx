@@ -10,40 +10,36 @@ import { useUI } from '@/context/UI';
 import { Alert, IconButton } from '@mui/joy';
 import { performGet, performPost, performPut } from '@/services/Instance/fetch.service';
 import ListItem from '@/components/common/List';
-import UsersPage from '../base/users/page';
 import { Forms } from '@/components/common/Forms/form';
-import FeildPage from '../base/field/page';
 import { FormInput, IsubQuery } from '@/components/common/Forms/main';
+import CoursePage from '../course/page';
 
-interface SignInFormElement extends HTMLFormElement {}
+interface formElement extends HTMLFormElement { }
 
-type FormInputKey = 'TETITLE' | 'TELEV' | 'graduationYear' | 'userId' | 'fieldStudyId' | "FSName" | "CollegeName";
+type FormInputKey = "COID" | 'PRECOID' | 'course_COTITLE' | 'preCourse_COTITLE';
 
 const FormInputs: Record<FormInputKey, FormInput> = {
-    "TETITLE": { name: "عنوان استاد", type: "text" },
-    "TELEV": { name: "سطح استاد", type: "text" },
-    "graduationYear": { name: "سال فارق التحصیل", type: "number", min: 1300, max: 1500, placeholder: "مثال: 1370" },
-    "userId": {
-        name: "شناسه کاربری",
+    "COID": {
+        name: "شناسه درس",
         type: "number",
-        leftButton: { id: "users", name: "جستجو کاربران" },
+        leftButton: { id: "course1", name: "جستجو درس" },
         dataType: "integer",
         noTable: true
     },
-    "fieldStudyId": {
-        name: "شناسه رشته تحصیلی",
+    "PRECOID": {
+        name: "شناسه درس پیش نیاز",
         type: "number",
-        leftButton: { id: "field", name: "جستجو رشته" },
+        leftButton: { id: "course2", name: "جستجو درس" },
         dataType: "integer",
         noTable: true
     },
-    "FSName": { name: "رشته تحصیلی", type: "text", noInput: true },
-    "CollegeName": { name: "دانشکده", type: "text", noInput: true },
+    "course_COTITLE": { name: "عنوان درس", type: "text", noInput: true },
+    "preCourse_COTITLE": { name: "عنوان درس پیش نیاز", type: "text", noInput: true },
 } as const;
 
 // path uri
-export const pathname = "/teachers"
-export const pageName = "استاد"
+export const pathname = "/prereq"
+export const pageName = "پیشنیاز درس ها"
 
 export const subQuery: IsubQuery[] = [{
     name: "CollegeID",
@@ -51,13 +47,15 @@ export const subQuery: IsubQuery[] = [{
     option: []
 }]
 
-export default function ProfessorPage({target = "" , readOnly = false}) {
+export default function Semester() {
     const { showModal, showAlert, closeModal } = useUI();
     const [isLoading, setIsLoading] = React.useState<boolean>(false);
+    const [isLoadingData, setIsLoadingData] = React.useState<boolean>(false);
     const [change, setChange] = React.useState<Date>(new Date());
     const [res, setRes] = React.useState(null)
+    const [editId, setEditId] = React.useState(0)
 
-    function handleSubmit(event: React.FormEvent<SignInFormElement>, id?: number) {
+    function handleSubmit(event: React.FormEvent<formElement>) {
         event.preventDefault();
 
         const form = event.currentTarget as HTMLFormElement;
@@ -88,12 +86,13 @@ export default function ProfessorPage({target = "" , readOnly = false}) {
 
         setIsLoading(true)
 
-        if (id) {
-            performPut(`${pathname}/${id}`, serializedData).then(() => {
+        if (editId) {
+            performPut(`${pathname}/${editId}`, serializedData).then(() => {
                 setIsLoading(false)
                 showAlert('با موفقیت ویرایش شد', "success");
                 setChange(new Date())
                 const form = document.querySelector("form") as HTMLFormElement
+                setEditId(0)
                 form.reset()
 
             }).catch(err => {
@@ -116,6 +115,7 @@ export default function ProfessorPage({target = "" , readOnly = false}) {
     }
 
     function handleShowEdit(id?: number) {
+        setEditId(id ?? 0)
         performGet(`${pathname}/${id}`).then(res => {
             setRes(res)
         })
@@ -134,11 +134,11 @@ export default function ProfessorPage({target = "" , readOnly = false}) {
             </div>,
             content: <div>
                 {
-                    id === "users" ?
-                        <UsersPage target="userId" readOnly={true} />
+                    id === "course1" ?
+                        <CoursePage target="COID" readOnly={true} />
                         :
-                        id === "field" ?
-                            <FeildPage target="fieldStudyId" readOnly={true} />
+                        id === "course2" ?
+                            <CoursePage target="PRECOID" readOnly={true} />
                             :
                             <></>
                 }
@@ -170,33 +170,38 @@ export default function ProfessorPage({target = "" , readOnly = false}) {
                     }}
                 >
                     {/* <Alert {...{ title: 'Neutral', color: 'warning' }} >{pageName} را بررسی و ویرایش کنید.</Alert> */}
-                    {!readOnly && <>
-                        <Alert {...{ title: 'Neutral', color: 'primary' }}>اطلاعات {pageName} را وارد کنید.</Alert>
-                        <form onSubmit={handleSubmit} className='flex items-start flex-col lg:flex-row'>
-                            <div className=' w-full lg:w-5/6 grid grid-cols-1 lg:grid-cols-3 gap-3 my-2 border-2 p-4 rounded-lg'>
-                                {Forms(FormInputs, handleSearchOpen, res)}
-                            </div>
-                            <div className=' w-full lg:w-1/6 p-4 flex justify-center items-center flex-row lg:flex-col h-full'>
-                                <Button
-                                    loading={isLoading}
-                                    className='w-full min-w-max'
-                                    type="submit">ثبت اطلاعات</Button>
-                                <Button
-                                    sx={{ mx: 1 }}
-                                    dir='ltr'
-                                    variant='outlined'
-                                    className='w-full mt-2 min-w-max'
-                                    color="success"
-                                    type='button'
-                                    startDecorator={<DownloadRoundedIcon />}
-                                    size="sm"
-                                >
-                                    خروجی Excel
-                                </Button>
-                            </div>
-                        </form>
-                    </>}
-                    <ListItem subQuery={subQuery} path={pathname} pageName={pageName} change={change} handleShowModalAdd={handleShowEdit} haedItem={FormInputs} readOnly={readOnly} target={target} />
+                    <Alert {...{ title: 'Neutral', color: 'primary' }}>اطلاعات {pageName} را وارد کنید.</Alert>
+                    <form onSubmit={handleSubmit} className='flex items-start flex-col lg:flex-row'>
+                        <div className=' w-full lg:w-5/6 grid grid-cols-1 lg:grid-cols-3 gap-3 my-2 border-2 p-4 rounded-lg'>
+                            {Forms(FormInputs, handleSearchOpen, res, isLoadingData)}
+                        </div>
+                        <div className=' w-full lg:w-1/6 p-4 flex justify-center items-center flex-row lg:flex-col h-full'>
+                            <Button
+                                loading={isLoading}
+                                className='w-full min-w-max'
+                                type="submit">
+                                {
+                                    editId ?
+                                        "ویرایش اطلاعات"
+                                        :
+                                        "ثبت اطلاعات"
+                                }
+                            </Button>
+                            <Button
+                                sx={{ mx: 1 }}
+                                dir='ltr'
+                                variant='outlined'
+                                className='w-full mt-2 min-w-max'
+                                color="success"
+                                type='button'
+                                startDecorator={<DownloadRoundedIcon />}
+                                size="sm"
+                            >
+                                خروجی Excel
+                            </Button>
+                        </div>
+                    </form>
+                    <ListItem subQuery={subQuery} path={pathname} pageName={pageName} change={change} handleShowModalAdd={handleShowEdit} haedItem={FormInputs} />
                 </Box>
             </Box>
         </CssVarsProvider>
