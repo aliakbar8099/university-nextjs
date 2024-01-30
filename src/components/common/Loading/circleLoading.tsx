@@ -5,7 +5,7 @@ interface ILoading {
     className?: string | undefined;
 }
 
-const CircleLoading: FC<ILoading> = (className) => {
+const CircleLoading: FC<ILoading> = ({ className }) => {
     return (
         <div className={`flex justify-center items-center w-full h-screen ${className}`}>
             <CircularProgress />

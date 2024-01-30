@@ -24,6 +24,7 @@ import Sheet from '@mui/joy/Sheet';
 interface SignInFormElement extends HTMLFormElement { }
 
 type FormInputKey = "fullname" | "CollegeID" | 'STLEV' | 'FSID' | 'userId' | 'semesterID' | "semesterName" | "FSName" | "CollegeName";
+type TableKey = "CourseName" | "TeacherName" | "CourseID";
 
 const FormInputs: Record<FormInputKey, FormInput> = {
   "STLEV": {
@@ -55,6 +56,15 @@ const FormInputs: Record<FormInputKey, FormInput> = {
   "CollegeName": { name: "دانشکده", type: "text", noInput: true },
 } as const;
 
+const TableData: any = {
+  "CourseName": { name: "عنوان درس", type: "text", noInput: true },
+  "CourseID": { name: "کد درس", type: "text", noInput: true },
+  "TeacherName": { name: "استاد", type: "text", noInput: true },
+  "StudentID": { name: "شماره دانشجویی", type: "text", noInput: true },
+  "Grade": { name: "نمره", type: "text", noInput: true },
+  "status": { name: "وضعیت", type: "text", noInput: true, check: "Grade", nexCheck: "isFinal" },
+} as const;
+
 // path uri
 export const pathname = "/students"
 export const pageName = "تکمیل ثبت نام"
@@ -66,7 +76,8 @@ export const subQuery: IsubQuery[] = [{
 }]
 
 export default function Home() {
-  const { user, student, setChange, teacher } = useUser()
+  const { user, student, setChange, teacher, semester } = useUser()
+
   const { showModal, showAlert, closeModal } = useUI();
   const [isLoadingSubmit, setIsLoadingSumnit] = React.useState<boolean>(false);
   const [isLoadingData, setIsLoadingData] = React.useState<boolean>(false);
@@ -168,7 +179,7 @@ export default function Home() {
       <CssBaseline />
       <Box sx={{ display: 'flex' }}>
         {
-          student?.term || user?.role != "student" ?
+          (student?.term && (semester.id == student.semesterId)) || user?.role != "student" ?
             <Box
               sx={{
                 width: '100%',
@@ -271,37 +282,37 @@ export default function Home() {
                       </Sheet>
                       :
                       student ?
-                      <Sheet
-                        sx={{
-                          bgcolor: 'background.level1',
-                          borderRadius: 'sm',
-                          p: 1.5,
-                          my: 1.5,
-                          display: 'flex',
-                          gap: 2,
-                          '& > div': { flex: 1 },
-                        }}
-                      >
-                        <div>
-                          <Typography level="body-xs" fontWeight="lg">
-                            نیم سال جاری
-                          </Typography>
-                          <Typography fontWeight="lg">{student?.semesterName}(ترم  {student?.term})</Typography>
-                        </div>
-                        <div>
-                          <Typography level="body-xs" fontWeight="lg">
-                            معدل نیم سال
-                          </Typography>
-                          <Typography fontWeight="lg">نامشخص</Typography>
-                        </div>
-                        <div>
-                          <Typography level="body-xs" fontWeight="lg">
-                            معدل کل
-                          </Typography>
-                          <Typography fontWeight="lg">18.57</Typography>
-                        </div>
-                      </Sheet>
-                      : <></>
+                        <Sheet
+                          sx={{
+                            bgcolor: 'background.level1',
+                            borderRadius: 'sm',
+                            p: 1.5,
+                            my: 1.5,
+                            display: 'flex',
+                            gap: 2,
+                            '& > div': { flex: 1 },
+                          }}
+                        >
+                          <div>
+                            <Typography level="body-xs" fontWeight="lg">
+                              نیم سال جاری
+                            </Typography>
+                            <Typography fontWeight="lg">{student?.semesterName}(ترم  {student?.term})</Typography>
+                          </div>
+                          <div>
+                            <Typography level="body-xs" fontWeight="lg">
+                              معدل نیم سال
+                            </Typography>
+                            <Typography fontWeight="lg">نامشخص</Typography>
+                          </div>
+                          <div>
+                            <Typography level="body-xs" fontWeight="lg">
+                              معدل کل
+                            </Typography>
+                            <Typography fontWeight="lg">18.57</Typography>
+                          </div>
+                        </Sheet>
+                        : <></>
                   }
                   <Box sx={{ display: 'flex', gap: 1.5, '& > button': { flex: 1 } }}>
                     <Button variant="outlined" color="neutral">
@@ -320,6 +331,10 @@ export default function Home() {
                   </Box>
                 </CardContent>
               </Card>
+              {
+                student &&
+                <ListItem ActionBtn={({ }) => <></>} subQuery={subQuery} path={"/course-registration"} pageName={"درس های اخز شده"} haedItem={TableData} />
+              }
             </Box>
             :
             <Box

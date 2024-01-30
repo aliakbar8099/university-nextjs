@@ -12,8 +12,10 @@ export interface FormInput {
     noTable?: true;
     noInput?: true;
     placeholder?: string;
-    disabled?:true;
-    hidden?:true;
+    disabled?: true;
+    hidden?: true;
+    check?: string;
+    nexCheck?: string;
 }
 
 export interface IsubQuery {

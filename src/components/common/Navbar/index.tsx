@@ -8,10 +8,11 @@ import PersonRoundedIcon from '@mui/icons-material/PersonRounded';
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded';
 import { useUser } from '@/context/User';
 import { useUI } from '@/context/UI';
-import { WarningRounded } from '@mui/icons-material';
+import { ListRounded, WarningRounded } from '@mui/icons-material';
 import { findRoutes } from '@/routes/findRoutes';
 import { usePathname } from 'next/navigation';
 import { Routes } from '@/routes/main';
+import { performGet } from '@/services/Instance/fetch.service';
 
 const LazyMenuRoundedIcon = lazy(() => import('@mui/icons-material/MenuRounded'));
 const LazyMenuOpenRoundedIcon = lazy(() => import('@mui/icons-material/MenuOpenRounded'));
@@ -25,14 +26,27 @@ interface NavbarProps {
 const Navbar: React.FC<NavbarProps> = ({ handleOpenMunu, openSideBar }) => {
     const pathname = usePathname()
     const { showModal, closeModal } = useUI();
-    const { user, logout, isLoadingLogout, semester } = useUser();
+    const { user, logout, isLoadingLogout, semester, setSemester, setChange, setStudents } = useUser();
 
     const [isItems, setIsItems] = useState(false);
     const [isHideBtnMuue, setIsHideBtnMuue] = useState(false);
+    const [semesters, setSemesters] = useState([])
 
     useEffect(() => {
+        performGet("/users/semester").then(res => {
+            setSemesters(res.responseData);
+        })
+
         setIsHideBtnMuue(!window.matchMedia("(max-width: 1024px)").matches)
     }, [])
+
+    function handleSemster(id: number) {
+        performGet(`/semester/${id}`).then(res => {
+            setSemester(res.responseData)
+            setChange(new Date())
+        })
+
+    }
 
     const handleShowModalClose = () => {
         showModal({
@@ -100,6 +114,30 @@ const Navbar: React.FC<NavbarProps> = ({ handleOpenMunu, openSideBar }) => {
                                     <div className='w-[6px] h-[6px] rounded-sm bg-[#f7aa1d] absolute top-[2px] left-[2px]'></div>
                                     <NotificationsActiveOutlinedIcon />
                                 </IconButton>
+                                {/* <Dropdown>
+                                    <MenuButton
+                                        variant="plain">
+                                        <div className='flex items-center p-1'>
+                                            <ListRounded />
+                                            <div className='text-right hidden lg:block'>
+                                                <h4 className='truncate w-[120px] mr-3 text-[14px]'>{semester?.name ?? "بدون نیم سال"}</h4>
+                                            </div>
+                                        </div>
+                                    </MenuButton>
+                                    <Menu>
+                                        <Menu className='w-[250px]'>
+                                            {
+                                                semesters.map((i: any) => {
+                                                    return (
+                                                        <MenuItem onClick={() => handleSemster(i.semesterID)} key={i.semesterID}>
+                                                            <Typography>{i.name}</Typography>
+                                                        </MenuItem>
+                                                    )
+                                                })
+                                            }
+                                        </Menu>
+                                    </Menu>
+                                </Dropdown> */}
                                 <Dropdown>
                                     <MenuButton
                                         variant="plain">

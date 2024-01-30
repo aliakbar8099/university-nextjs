@@ -36,6 +36,7 @@ import { CircularProgress, Skeleton } from '@mui/joy';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { DatePickerJalali } from '../DatePickerJalali';
 import { useUI } from '@/context/UI';
+import { AutorenewRounded, BlockRounded, CheckRounded, ErrorRounded } from '@mui/icons-material';
 
 function descendingComparator<T>(a: T, b: T, orderBy: keyof T) {
     if (b[orderBy] < a[orderBy]) {
@@ -99,10 +100,11 @@ interface ITableOrder {
     setIsEditWidthID: React.Dispatch<React.SetStateAction<number>>;
     isEditWidthID: number;
     pageName: string;
-    handleShowModalAdd: (id?: number) => void;
+    handleShowModalAdd?: (id?: number) => void;
     subQuery?: IsubQuery[];
     readOnly?: boolean;
     target?: string;
+    ActionBtn?: ({ }: any) => React.JSX.Element;
     handleGetValue: ((e?: {
         target: {
             name: string;
@@ -123,6 +125,7 @@ const OrderTable: React.FC<ITableOrder> = ({
     handleShowModalAdd,
     target,
     readOnly,
+    ActionBtn,
     handelDelete }) => {
     const searchParams = useSearchParams()
     const { closeModal } = useUI()
@@ -180,13 +183,11 @@ const OrderTable: React.FC<ITableOrder> = ({
                     <MoreHorizRoundedIcon />
                 </MenuButton>
                 <Menu size="sm" sx={{ minWidth: 140 }}>
-                    <MenuItem onClick={() => handleShowModalAdd(id)} >ویرایش</MenuItem>
-                    <MenuItem>تغییر نام</MenuItem>
-                    <MenuItem>انتقال</MenuItem>
+                    <MenuItem onClick={() => !!handleShowModalAdd && handleShowModalAdd(id)} >ویرایش</MenuItem>
                     <Divider />
                     <MenuItem color="danger" onClick={() => handelDelete(id)}>حذف</MenuItem>
                 </Menu>
-            </Dropdown>
+            </Dropdown >
         );
     }
 
@@ -293,59 +294,126 @@ const OrderTable: React.FC<ITableOrder> = ({
                     <tbody>
                         {
                             !loading ?
-                                stableSort(listItam, getComparator(order, 'id')).map((row: any, n: number) => (
-                                    <tr key={row.id} className={selected.includes(row.id) ? "active" : undefined}>
-                                        {!readOnly && <td style={{ textAlign: 'center', width: 120 }}>
-                                            {
-                                                loadingWithID === row.id ?
-                                                    <CircularProgress size='sm' sx={{ "--CircularProgress-size": "16px" }} />
-                                                    :
-                                                    <Checkbox
-                                                        checked={selected.includes(row.id)}
-                                                        onChange={(event) => {
-                                                            setSelected((ids) =>
-                                                                event.target.checked
-                                                                    ? ids.concat(row.id)
-                                                                    : ids.filter((itemId) => itemId !== row.id),
-                                                            );
-                                                        }}
-                                                    />
-                                            }
-                                        </td>}
+                                !listItam.length ?
+                                    <>
                                         <td>
-                                            <Typography level="body-xs">{n + 1}</Typography>
                                         </td>
                                         <td>
-                                            <Typography level="body-xs">{row.id}</Typography>
+                                        </td>
+                                        <td>
                                         </td>
                                         {
-                                            Object.values(haedItem).map((head: any, index) => {
-                                                const key = Object.keys(haedItem)[index]
+                                            Object.values(haedItem).map((head: any, n) => {
+                                                return !head.noTable && <td><p className='text-gray-500'>{n === 2 && "رکوردی ثبت نشده"}</p></td>
+                                            })
+                                        }
+                                        <td>
+                                        </td>
+                                    </>
+                                    :
+                                    stableSort(listItam, getComparator(order, 'id')).map((row: any, n: number) => (
+                                        <tr key={row.id} className={selected.includes(row.id) ? "active" : undefined}>
+                                            {!readOnly && <td style={{ textAlign: 'center', width: 120 }}>
+                                                {
+                                                    loadingWithID === row.id ?
+                                                        <CircularProgress size='sm' sx={{ "--CircularProgress-size": "16px" }} />
+                                                        :
+                                                        <Checkbox
+                                                            checked={selected.includes(row.id)}
+                                                            onChange={(event) => {
+                                                                setSelected((ids) =>
+                                                                    event.target.checked
+                                                                        ? ids.concat(row.id)
+                                                                        : ids.filter((itemId) => itemId !== row.id),
+                                                                );
+                                                            }}
+                                                        />
+                                                }
+                                            </td>}
+                                            <td>
+                                                <Typography level="body-xs">{n + 1}</Typography>
+                                            </td>
+                                            <td>
+                                                <Typography level="body-xs">{row.id}</Typography>
+                                            </td>
+                                            {
+                                                Object.values(haedItem).map((head: any, index) => {
+                                                    const key = Object.keys(haedItem)[index]
 
+                                                    if (head.check) {
+                                                        const status = row[head.check] >= 10
+                                                            ? "success"
+                                                            : row[head.check] < 10
+                                                                ? "danger"
+                                                                : "warning"
 
-                                                if (head.type === "date") {
+                                                        return (
+                                                            !head.noTable &&
+                                                            <td>
+                                                                <Typography level="body-xs">
+                                                                    <Chip
+                                                                        size='sm'
+                                                                        variant="solid"
+                                                                        color={status}
+                                                                        startDecorator={
+                                                                            status === "success"
+                                                                                ? <CheckRounded />
+                                                                                : status === "danger" ?
+                                                                                    <BlockRounded />
+                                                                                    : <AutorenewRounded />
+                                                                        }>
+                                                                        {
+                                                                            status === "success" ?
+                                                                                "قبول شده"
+                                                                                : status === "danger" ?
+                                                                                    "مردود شده"
+                                                                                    : "گزارش نشده"
+                                                                        }
+                                                                    </Chip>
+                                                                    <Chip
+                                                                        size='sm'
+                                                                        sx={{ mx: 1 }}
+                                                                        variant="soft"
+                                                                        color={row[head.nexCheck] ? "success" : "warning"}
+                                                                        startDecorator={
+                                                                            row[head.nexCheck]
+                                                                                ? <CheckRounded />
+                                                                                : <AutorenewRounded />
+                                                                        }>
+                                                                        {
+                                                                            row[head.nexCheck] ?
+                                                                                "نهایی شده"
+                                                                                : "نهایی نشده"
+                                                                        }
+                                                                    </Chip>
+                                                                </Typography>
+                                                            </td>
+                                                        )
+                                                    }
+
+                                                    if (head.type === "date") {
+                                                        return (
+                                                            !head.noTable &&
+                                                            <td>
+                                                                <Typography level="body-xs">
+                                                                    {moment(row[key].substring(0, 10)).format('jYYYY/jMM/jDD')}
+                                                                </Typography>
+                                                            </td>
+                                                        )
+                                                    }
+
                                                     return (
                                                         !head.noTable &&
                                                         <td>
                                                             <Typography level="body-xs">
-                                                                {moment(row[key].substring(0, 10)).format('jYYYY/jMM/jDD')}
+                                                                {row[key]}
                                                             </Typography>
                                                         </td>
                                                     )
-                                                }
+                                                })
 
-                                                return (
-                                                    !head.noTable &&
-                                                    <td>
-                                                        <Typography level="body-xs">
-                                                            {row[key]}
-                                                        </Typography>
-                                                    </td>
-                                                )
-                                            })
-
-                                        }
-                                        {/* <td>
+                                            }
+                                            {/* <td>
                                             <Typography level="body-xs">
                                                 {moment(row.startDate.substring(0, 10)).format('jYYYY/jMM/jDD')}
                                             </Typography>
@@ -355,7 +423,7 @@ const OrderTable: React.FC<ITableOrder> = ({
                                                 {moment(row.endDate.substring(0, 10)).format('jYYYY/jMM/jDD')}
                                             </Typography>
                                         </td> */}
-                                        {/* <td>
+                                            {/* <td>
                                         <Chip
                                             variant="soft"
                                             size="sm"
@@ -377,7 +445,7 @@ const OrderTable: React.FC<ITableOrder> = ({
                                             {row.status}
                                         </Chip>
                                     </td> */}
-                                        {/* <td>
+                                            {/* <td>
                                         <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
                                             <Avatar size="sm">{row?.customer?.initial}</Avatar>
                                             <div>
@@ -386,18 +454,19 @@ const OrderTable: React.FC<ITableOrder> = ({
                                             </div>
                                         </Box>
                                     </td> */}
-                                        <td>
-                                            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', justifyContent: "end" }}>
-                                                {
-                                                    readOnly ?
-                                                        <Button className='w-full' onClick={() => handleSelectRow(row.id)} >انتخاب</Button>
-                                                        :
-                                                        <RowMenu id={row.id} />
-                                                }
-                                            </Box>
-                                        </td>
-                                    </tr>
-                                ))
+                                            <td>
+                                                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', justifyContent: "end" }}>
+                                                    {!ActionBtn && (
+                                                        readOnly ?
+                                                            <Button className='w-full' onClick={() => handleSelectRow(row.id)} >انتخاب</Button>
+                                                            :
+                                                            <RowMenu id={row.id} />)
+                                                    }
+                                                    {ActionBtn && <ActionBtn data={row} />}
+                                                </Box>
+                                            </td>
+                                        </tr>
+                                    ))
                                 :
                                 [1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16].map((row: any) => (
                                     <tr key={row}>

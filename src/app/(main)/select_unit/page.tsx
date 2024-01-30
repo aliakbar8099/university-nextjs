@@ -7,85 +7,37 @@ import Button from '@mui/joy/Button';
 import DownloadRoundedIcon from '@mui/icons-material/DownloadRounded';
 import { CloseRounded } from '@mui/icons-material';
 import { useUI } from '@/context/UI';
-import { Alert, IconButton } from '@mui/joy';
+import { Alert, IconButton, Table } from '@mui/joy';
 import { performGet, performPost, performPut } from '@/services/Instance/fetch.service';
 import ListItem from '@/components/common/List';
 import { Forms } from '@/components/common/Forms/form';
 import { FormInput, IsubQuery } from '@/components/common/Forms/main';
-import ProfessorPage from '../professor/page';
-import FeildPage from '../base/field/page';
+import { useUser } from '@/context/User';
+import CoursePage from '../course/page';
+import { useRouter } from 'next/navigation';
 
 interface SignInFormElement extends HTMLFormElement { }
 
-type FormInputKey = "CTEID" | 'CFSID' | 'CREDIT' | 'COTYPE' | 'weekDay' | 'hour' | 'examDate' | 'examHour' | 'COTITLE' | 'TETITLE' | 'FSName' | 'CollegeName' | 'course_time' | 'exam_time';
+type FormInputKey = "CourseName" | "TeacherName" | "RCOID" | "CourseID" | 'course_time' | 'exam_time';
 
 const FormInputs: Record<FormInputKey, FormInput> = {
-    "COTITLE": { name: "عنوان درس", type: "text" },
-    "COTYPE": {
-        name: "سطح درس",
-        type: "select",
-        noTable: true,
-        options: [
-            { key: "A", value: "تخصصی" },
-            { key: "B", value: "اصلی" },
-            { key: "C", value: "پایه" },
-            { key: "D", value: "عمومی" },
-        ]
-    },
-    "CREDIT": {
-        name: "واحد درس",
-        type: "select",
-        dataType: "integer",
-        noTable: true,
-        options: [
-            { key: 4, value: "چهار واحدی" },
-            { key: 3, value: "سه واحدی" },
-            { key: 2, value: "دو واحدی" },
-            { key: 1, value: "یک واحدی" },
-        ]
-    },
-    "CFSID": {
-        name: "شناسه رشته تحصیلی",
-        type: "number",
-        leftButton: { id: "field", name: "جستجو رشته" },
-        dataType: "integer",
-        noTable: true
-    },
-    "CTEID": {
-        name: "شناسه استاد",
-        type: "number",
-        leftButton: { id: "teacher", name: "جستجو استاد" },
-        dataType: "integer",
-        noTable: true
-    },
-    "weekDay": {
-        name: "روز هفته",
-        type: "select",
-        dataType: "integer",
-        noTable: true,
-        options: [
-            { key: 6, value: "شنبه" },
-            { key: 0, value: "یک شنبه" },
-            { key: 1, value: "دو شنبه" },
-            { key: 2, value: "سه شنبه" },
-            { key: 3, value: "چهار شنبه" },
-            { key: 4, value: "پنج شنبه" },
-            { key: 5, value: "جمعه" },
-        ]
-    },
-    "hour": { name: "ساعت شروع کلاس", type: "time", noTable: true },
-    "course_time": { name: "زمان کلاس", type: "text", noInput: true },
+    "CourseName": { name: "عنوان واحد", type: "text", noInput: true },
+    "course_time": { name: "شروع کلاس", type: "text", noInput: true },
     "exam_time": { name: "زمان امتحان", type: "text", noInput: true },
-    "examDate": { name: "تاریخ امتحان", type: "date", noTable: true },
-    "examHour": { name: "ساعت امتحان", type: "time", noTable: true },
-    "TETITLE": { name: "عنوان استاد", type: "text", noInput: true },
-    "FSName": { name: "رشته تحصیلی", type: "text", noInput: true },
-    "CollegeName": { name: "دانشکده", type: "text", noInput: true },
+    "CourseID": { name: "کد درس", type: "text", noInput: true },
+    "RCOID": {
+        name: "کد درس",
+        type: "number",
+        noTable: true,
+        leftButton: { id: "course", name: "جستجو دروس ارایه شده" },
+        dataType: "integer",
+    },
+    "TeacherName": { name: "استاد", type: "text", noInput: true },
 } as const;
 
 // path uri
-export const pathname = "/coureses"
-export const pageName = "درس"
+export const pathname = "/course-registration"
+export const pageName = "انتخاب واحد"
 
 export const subQuery: IsubQuery[] = [
     {
@@ -100,19 +52,33 @@ export const subQuery: IsubQuery[] = [
     }
 ]
 
-export default function CoursePage({ target = "", readOnly = false, filter = "" }: { filter?: string, readOnly: boolean, target: string }) {
+export default function SelectUnitPage({ target = "", readOnly = false }) {
     const { showModal, showAlert, closeModal } = useUI();
+    const { semester, student } = useUser();
+
     const [isLoading, setIsLoading] = React.useState<boolean>(false);
     const [isLoadingData, setIsLoadingData] = React.useState<boolean>(false);
     const [change, setChange] = React.useState<Date>(new Date());
     const [res, setRes] = React.useState(null)
     const [editId, setEditId] = React.useState(0)
+    const [data, setData] = React.useState<any[]>([])
+
+    React.useEffect(() => {
+        performGet("/course-registration/info/" + semester.id).then(res => {
+            setData(res.responseData);
+        })
+    }, [])
 
     function handleSubmit(event: React.FormEvent<SignInFormElement>) {
         event.preventDefault();
 
         const form = event.currentTarget as HTMLFormElement;
-        const serializedData: Record<string, any> = {};
+        let serializedData: Record<string, any> = {};
+
+        serializedData = {
+            semesterID: semester.id,
+            RSTID: student.id
+        }
 
         const formData = new FormData(form);
 
@@ -127,7 +93,7 @@ export default function CoursePage({ target = "", readOnly = false, filter = "" 
 
         let isValid = true
         for (const key of Object.keys(FormInputs) as FormInputKey[]) {
-            if ((!serializedData[key] && serializedData[key] != 0) && !FormInputs[key].noInput) {
+            if (!serializedData[key] && !FormInputs[key].noInput) {
                 showAlert(`لطفا ${FormInputs[key].name} را وارد کنید!`, "danger");
                 isValid = false;
                 break;
@@ -187,13 +153,10 @@ export default function CoursePage({ target = "", readOnly = false, filter = "" 
             </div>,
             content: <div>
                 {
-                    id === "teacher" ?
-                        <ProfessorPage target="CTEID" readOnly={true} />
+                    id === "course" ?
+                        <CoursePage target="RCOID" readOnly={true} filter={`FieldId=${student.FSID}`} />
                         :
-                        id === "field" ?
-                            <FeildPage target="CFSID" readOnly={true} />
-                            :
-                            <></>
+                        <></>
                 }
             </div>,
         });
@@ -256,7 +219,30 @@ export default function CoursePage({ target = "", readOnly = false, filter = "" 
                             </div>
                         </form>
                     </>}
-                    <ListItem readOnly={readOnly} target={target} subQuery={subQuery} path={pathname} filter={filter} pageName={pageName} change={change} handleShowModalAdd={handleShowEdit} haedItem={FormInputs} />
+                    <div className='w-full md:w-2/3 m-auto border'>
+                        <Table borderAxis="both">
+                            <thead>
+                                <tr>
+                                    <th></th>
+                                    <th><div className='text-center'>اخذ شده</div></th>
+                                    <th><div className='text-center'>گذرانیده</div></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>نیم سال</td>
+                                    <td><div className='text-center'>{data[1]?.totallUnit_half_get}</div></td>
+                                    <td><div className='text-center'>{data[0]?.totallUnit_half_final}</div></td>
+                                </tr>
+                                <tr>
+                                    <td>کل</td>
+                                    <td><div className='text-center'>{data[3]?.totallUnit}</div></td>
+                                    <td><div className='text-center'>{data[2]?.totallUnit}</div></td>
+                                </tr>
+                            </tbody>
+                        </Table>
+                    </div>
+                    <ListItem readOnly={readOnly} target={target} subQuery={subQuery} path={pathname} pageName={pageName} change={change} handleShowModalAdd={handleShowEdit} haedItem={FormInputs} />
                 </Box>
             </Box>
         </CssVarsProvider>

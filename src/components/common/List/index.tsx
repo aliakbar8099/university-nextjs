@@ -19,14 +19,16 @@ interface ListProps {
     path?: string | undefined;
     change?: Date | undefined;
     haedItem?: any;
-    handleShowModalAdd: (id?: number) => void;
+    handleShowModalAdd?: (id?: number) => void;
     pageName: string;
     subQuery?: IsubQuery[]
     readOnly?: boolean;
     target?: string;
+    filter?: string;
+    ActionBtn?: ({ }: any) => React.JSX.Element;
 }
 
-function ListItem({ path, change, haedItem, handleShowModalAdd, pageName, subQuery, readOnly, target }: ListProps) {
+function ListItem({ path, change, haedItem, handleShowModalAdd, pageName, subQuery, readOnly, target, ActionBtn, filter }: ListProps) {
     const { showModal, closeModal, showAlert } = useUI()
     const [listItam, setListItem] = useState([])
     const [loading, setLoading] = useState(false)
@@ -37,8 +39,8 @@ function ListItem({ path, change, haedItem, handleShowModalAdd, pageName, subQue
     const router = useRouter()
     const pathname = usePathname()
 
-    function setRoute(page: string = "1", search: string = "", subSerach = "") {
-        const url = `${pathname}/${search ? "?" : `?page=${page || 1}&`}${page ? "" : "search=" + search}${subSerach}`
+    function setRoute(page: string = "1", search: string = "", subSerach = "", filter = "") {
+        const url = `${pathname}/${search ? "?" : `?page=${page || 1}&`}${page ? "" : "search=" + search}${subSerach}${filter}`
         setRouerPath(url)
         router.push(url)
     }
@@ -52,10 +54,10 @@ function ListItem({ path, change, haedItem, handleShowModalAdd, pageName, subQue
         setTimeout(() => {
             getData(`${path}${location.search}`)
         }, 500);
-    }, [change, routerPath])
+    }, [change, routerPath, filter])
 
     function getData(url: string) {
-        performGet(url).then(res => {
+        performGet(url + (!!location.search ? `&${filter ?? ""}` : `?${filter ?? ""}`)).then(res => {
             setLoading(false)
             setLoadingWithID(0)
             setListItem(res.responseData);
@@ -117,6 +119,7 @@ function ListItem({ path, change, haedItem, handleShowModalAdd, pageName, subQue
                 readOnly={readOnly}
                 subQuery={subQuery}
                 pageName={pageName}
+                ActionBtn={ActionBtn}
                 setRoute={setRoute} />
         </div>
     );

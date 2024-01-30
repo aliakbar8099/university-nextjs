@@ -1,6 +1,8 @@
-import { ReactNode } from "react";
+import { Dispatch, ReactNode } from "react";
 
 type StudentType = {
+    [x: string]: any;
+    id: number,
     firstName: string;
     lastName: string;
     STLEV: string;
@@ -55,6 +57,8 @@ export interface UserContextType {
     setChange: Dispatch<SetStateAction<boolean>>
     teacher: teacherType;
     semester: semesterType;
+    setSemester: Dispatch<any>;
+    setStudents:any
 }
 
 export interface UserProviderProps {

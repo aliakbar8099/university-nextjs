@@ -61,13 +61,22 @@ export const UserProvider = ({ children }: UserProviderProps) => {
 
                 switch (resUser.responseData.role) {
                     case "student":
-                        performGet(`/students?userId=${resUser.responseData.id}`).then(res => {
-                            setStudents(res.responseData[0])
-                            performGet(`/students/term/${resUser.responseData.id}`).then(response => {
-                                setStudents({ ...res.responseData[0], term: response.responseData.term })
-                                setIsLoading(false)
+                        if (student?.userId) {
+                            performGet(`/students/semester/${semester.semesterId}`).then(res => {
+                                performGet(`/students/term/${user?.id}`).then(response => {
+                                    setSemester({ ...res.responseData, term: response.responseData.term });
+                                    setChange(new Date())
+                                })
                             })
-                        })
+                        } else {
+                            performGet(`/students?userId=${resUser.responseData.id}`).then(res => {
+                                setStudents(res.responseData[0])
+                                performGet(`/students/term/${resUser.responseData.id}`).then(response => {
+                                    setStudents({ ...res.responseData.reverse()[0], term: response.responseData.term })
+                                    setIsLoading(false)
+                                })
+                            })
+                        }
                         break;
                     case "teacher":
                         performGet(`/teachers?userId=${resUser.responseData.id}`).then(res => {
@@ -114,7 +123,9 @@ export const UserProvider = ({ children }: UserProviderProps) => {
                 student,
                 setChange,
                 teacher,
-                semester
+                semester,
+                setSemester,
+                setStudents
             }
         }>
             {children}

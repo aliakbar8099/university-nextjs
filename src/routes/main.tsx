@@ -14,15 +14,15 @@ export const Routes = [
     {
         id: 1, name: "مدیریت واحد ها", icon: <BeenhereRoundedIcon />, hide: ["admin", "teacher"],
         chids: [
-            { name: "انتخاب واحد", path: "/invoice", access: ['student'] },
+            { name: "انتخاب واحد", path: "/select_unit", access: ['student'] },
             { name: "مشاهده واحد", path: "/", access: ['student'] },
         ],
     },
     {
         id: 32, name: "دانشجو", icon: <BeenhereRoundedIcon />, hide: ["admin", "student"],
         chids: [
-            { name: "ثبت نمره", path: "/", access: ['teacher'] },
-            { name: "لیست دانشجو ها", path: "/", access: ['teacher'] },
+            { name: "ثبت نمره", path: "/teacher/submit_grade", access: ['teacher'] },
+            { name: "لیست دانشجو ها", path: "/teacher/list", access: ['teacher'] },
         ],
     },
     {
@@ -47,8 +47,7 @@ export const Routes = [
     {
         id: 6, name: "گزارشات", icon: <InsertChartRoundedIcon />, hide: ['admin', "teacher"],
         chids: [
-            { name: "کارنامه کامل", path: "/", access: ['student'] },
-            { name: "کارنامه نیم سال", path: "/", access: ['student'] },
+            { name: "کارنامه نیم سال", path: "/reportCardHalf", access: ['student'] },
         ],
     },
     {

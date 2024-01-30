@@ -3,14 +3,14 @@ import { DatePickerJalali } from "@/components/common/DatePickerJalali";
 import CircleLoading from "../Loading/circleLoading";
 
 export function Forms(data: any, handleSearchOpen: any, res?: any, isLoadingData?: boolean, setSelect?: any, selectTarget?: any) {
-    
+
     return (
         isLoadingData ?
-            <CircleLoading />
+            <CircleLoading className="h-[50%] w-[310%] mt-[3.5%]" />
             :
             Object.keys(data).map((key) => {
                 const typedKey = key as any;
-                const { name, type, options, value, min, max, width, leftButton, noInput, placeholder, disabled, hidden } = data[typedKey];
+                const { name, type, options, value, min, max, width, leftButton, noInput, placeholder, disabled, hidden, DateType } = data[typedKey];
 
                 if (type === "date") {
                     return (
@@ -21,16 +21,25 @@ export function Forms(data: any, handleSearchOpen: any, res?: any, isLoadingData
                         </FormControl>
                     )
                 }
+                if (type === "time") {
+                    return (
+                        !noInput &&
+                        <FormControl>
+                            <FormLabel>{name}</FormLabel>
+                            <Input type='time' name={key} />
+                        </FormControl>
+                    )
+                }
                 if (type === "number") {
                     return (
                         !noInput &&
                         <FormControl sx={{ display: hidden ? "none" : "initial" }}>
                             <FormLabel>{name}</FormLabel>
-                            <div className='flex items-center'>
+                            <div className='flex items-center flex-col md:flex-row'>
                                 <Input
                                     name={key}
                                     type='number'
-                                    sx={{ width }}
+                                    sx={{ width, minWidth: 100 }}
                                     placeholder={placeholder}
                                     disabled={disabled}
                                     fullWidth
@@ -44,7 +53,7 @@ export function Forms(data: any, handleSearchOpen: any, res?: any, isLoadingData
                                     defaultValue={res?.responseData[key] ?? value} />
                                 {
                                     leftButton &&
-                                    <Button onClick={() => handleSearchOpen(leftButton.id, leftButton.name)} variant='outlined' color='warning' className='whitespace-nowrap mx-2'>
+                                    <Button onClick={() => handleSearchOpen(leftButton.id, leftButton.name)} variant='outlined' color='warning' className='whitespace-nowrap mx-2 mt-2 md:mt-0'>
                                         {leftButton.name}
                                     </Button>
                                 }
